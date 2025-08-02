@@ -4,6 +4,6 @@
 from pydantic import BaseModel
 
 
-class Word(BaseModel):
+class NewWord(BaseModel):
     lang: str
     word: str
