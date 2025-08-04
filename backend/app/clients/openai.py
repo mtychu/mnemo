@@ -12,4 +12,5 @@ async def fetch_definition(lang: str, word: str):
         model="o4-mini-2025-04-16",
         input=prompt,
     )
+    print(response)
     return response
