@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.word_data import router as word_data_router
+from backend.app.api.vocab import router as vocab
 
 app = FastAPI()
 
@@ -13,4 +13,4 @@ app.add_middleware(
 )
 
 # Router to manage getting data about words
-app.include_router(word_data_router)
+app.include_router(vocab)
