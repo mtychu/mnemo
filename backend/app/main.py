@@ -15,4 +15,6 @@ app.add_middleware(
 # Router to manage getting data about vocabulary
 app.include_router(vocab)
 
-#  uvicorn main:app --reload for development server
+# uvicorn main:app --reload for development server
+# Router to manage getting data about words
+app.include_router(vocab)
