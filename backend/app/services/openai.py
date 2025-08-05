@@ -3,7 +3,7 @@ from openai import OpenAI
 client = OpenAI()
 
 
-async def fetch_definition(lang: str, word: str):
+async def get_ai_vocab_data(lang: str, word: str):
     prompt = (
         f"For the word '{word}' in '{lang}', "
         "please provide a definition in English and an example sentence n '{lang}'."

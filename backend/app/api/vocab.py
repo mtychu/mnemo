@@ -1,7 +1,9 @@
 # All APIs related to getting information about a word/vocab
+# This file should just pass variables to the logic inside the services
+
 from fastapi import APIRouter, HTTPException
-from backend.app.models.vocab import NewVocab, Vocab
-from services.openai import fetch_definition
+from models.vocab import NewVocab, Vocab
+from services.openai import get_ai_vocab_data
 
 router = APIRouter()
 
@@ -10,9 +12,9 @@ router = APIRouter(prefix="/vocab")
 
 # Write a full vocabulary entry
 @router.post("")
-async def write_vocab_entry(vocab: Vocab):
+async def create_vocab_entry(vocab: Vocab):
     try:
-        print("placeholder to write new vocabulary entry")
+        print("placeholder to write new vocabulary entry after user confirms details")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -21,6 +23,15 @@ async def write_vocab_entry(vocab: Vocab):
 @router.post("/generate")
 async def generate_vocab_data(request: NewVocab):
     try:
-        return await fetch_definition(request.lang, request.word)
+        return await get_ai_vocab_data(request.lang, request.word)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Retrieve list of all existing vocabulary
+@router.get("")
+async def get_vocab_entry():
+    try:
+        print("placeholder to retrieve vocabulary entry")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

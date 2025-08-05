@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.api.vocab import router as vocab
+from api.vocab import router as vocab
 
 app = FastAPI()
 
@@ -12,5 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Router to manage getting data about words
+# Router to manage getting data about vocabulary
 app.include_router(vocab)
+
+#  uvicorn main:app --reload for development server

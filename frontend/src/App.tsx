@@ -10,3 +10,5 @@ function App() {
 }
 
 export default App;
+
+// npm run dev for development server
