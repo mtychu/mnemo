@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 
 function NewWord() {
-  const [word, setWord] = useState("");
+  const [term, setTerm] = useState("");
   const [definition, setDefinition] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -9,12 +9,12 @@ function NewWord() {
     setLoading(true);
     try {
       // const response = await fetch(url, options);
-      const response = await fetch("http://localhost:8000/get-definition", {
+      const response = await fetch("http://localhost:8000/vocab/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ lang: "Japanese", word }), //word instead of word: word is ES6 shorthand
+        body: JSON.stringify({ targetLanguage: "Japanese", term }), //term instead of term: term is ES6 shorthand
       });
       // Have to await the JSON parse to get your actual data object
       const data = await response.json();
@@ -27,13 +27,13 @@ function NewWord() {
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setWord(e.target.value);
+    setTerm(e.target.value);
   };
 
   // When [word] changes, then run useEffect(), can have multiple
   useEffect(() => {
-    console.log(word);
-  }, [word]);
+    console.log(term);
+  }, [term]);
 
   useEffect(() => {
     console.log(definition);
@@ -41,7 +41,7 @@ function NewWord() {
 
   return (
     <div>
-      <input type="text" value={word} onChange={handleChange}></input>
+      <input type="text" value={term} onChange={handleChange}></input>
       <button onClick={handleSubmit}>Submit</button>
       {loading && <p>Loading...</p>}
     </div>

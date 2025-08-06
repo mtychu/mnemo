@@ -23,7 +23,7 @@ async def create_vocab_entry(vocab: Vocab):
 @router.post("/generate")
 async def generate_vocab_data(request: NewVocab):
     try:
-        return await get_ai_vocab_data(request.lang, request.word)
+        return await get_ai_vocab_data(request.target_language, request.term)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
