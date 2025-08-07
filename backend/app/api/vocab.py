@@ -16,6 +16,7 @@ async def create_vocab_entry(vocab: Vocab):
     try:
         print("placeholder to write new vocabulary entry after user confirms details")
     except Exception as e:
+        print("❌ Backend error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -23,8 +24,9 @@ async def create_vocab_entry(vocab: Vocab):
 @router.post("/generate")
 async def generate_vocab_data(request: NewVocab):
     try:
-        return await get_ai_vocab_data(request.target_language, request.term)
+        return get_ai_vocab_data(request.target_language, request.term)
     except Exception as e:
+        print("❌ Backend error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -34,4 +36,5 @@ async def get_vocab_entry():
     try:
         print("placeholder to retrieve vocabulary entry")
     except Exception as e:
+        print("❌ Backend error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))

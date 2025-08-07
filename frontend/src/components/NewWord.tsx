@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 
 function NewWord() {
   const [term, setTerm] = useState("");
-  const [definition, setDefinition] = useState([]);
+  const [definition, setDefinition] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -14,11 +14,12 @@ function NewWord() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ targetLanguage: "Japanese", term }), //term instead of term: term is ES6 shorthand
+        body: JSON.stringify({ targetLanguage: "Japanese", term }),
+        //'term' instead of 'term: term' is ES6 shorthand
       });
       // Have to await the JSON parse to get your actual data object
       const data = await response.json();
-      setDefinition(data.output);
+      setDefinition(data);
     } catch (err) {
       console.error(err);
     } finally {
