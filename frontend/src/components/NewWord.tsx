@@ -14,7 +14,7 @@ function NewWord() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ targetLanguage: "Japanese", term }),
+        body: JSON.stringify({ tl: "Japanese", term }),
         //'term' instead of 'term: term' is ES6 shorthand
       });
       // Have to await the JSON parse to get your actual data object

@@ -15,18 +15,20 @@ router = APIRouter(prefix="/vocab")
 async def create_vocab_entry(vocab: Vocab):
     try:
         print("placeholder to write new vocabulary entry after user confirms details")
+        return "placeholder to write new vocabulary entry after user confirms details"
     except Exception as e:
-        print("❌ Backend error:", repr(e))
+        print("❌ /vocab POST error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
 # Generate details for a new vocabulary entry
 @router.post("/generate")
-async def generate_vocab_data(request: NewVocab):
+async def generate_vocab_data(new_vocab: NewVocab):
     try:
-        return get_ai_vocab_data(request.target_language, request.term)
+        print("running vocab/generate with input:", new_vocab)
+        return get_ai_vocab_data(new_vocab.tl, new_vocab.term)
     except Exception as e:
-        print("❌ Backend error:", repr(e))
+        print("❌ /vocab/generate POST error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -35,6 +37,7 @@ async def generate_vocab_data(request: NewVocab):
 async def get_vocab_entry():
     try:
         print("placeholder to retrieve vocabulary entry")
+        return "placeholder to retrieve vocabulary entry"
     except Exception as e:
-        print("❌ Backend error:", repr(e))
+        print("❌ /vocab GET error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
