@@ -32,12 +32,14 @@ class ExampleSentence(BaseModel):
 class Vocab(BaseModel):
     term: str
     pronunciation: str
+    part_of_speech: str
     tl_definition: str
-    definition: str
+    eng_definition: str
     usage_notes: str
+    cautions: str
     audio_url: str
     user_notes: str | None = None
-    example_sentences: List[str]
+    example_sentences: List[ExampleSentence]
 
 
 class Sentence(BaseModel):
