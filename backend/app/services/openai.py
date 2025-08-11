@@ -20,12 +20,11 @@ def get_ai_vocab_data(tl: str, term: str):
                     - a definition in {tl} in as simple language as possible
                     - a definition in English
                     - non-english pronunciation guide e.g. furigana, pinyin
-                    - the part of speech, e.g. verb, noun, grammar point
-                    - 3 example sentences in {tl} with their english translations.
-                    - usage notes e.g. is it casual or formal? how common is it in
-                      normal conversation? how/where is it typically used?
-                    - cautions e.g are there any things learners should watch out for?
-                      and are there any other things this is often confused for?
+                    - the part of speech in English
+                    - 3 example sentences in {tl} with their english translations
+                      in as many different conjugations and contexts as possible.
+                    - usage notes in English
+                    - cautions in English
                     - a link to audio """,
             },
         ],
