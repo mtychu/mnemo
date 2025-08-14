@@ -1,8 +1,12 @@
 import { useEffect, useState, type ChangeEvent } from "react";
+import Button from "../components/Button";
+import TextInput from "../components/TextInput";
+import SentenceCard from "../components/SentenceCard";
 
-function NewWord() {
+function NewWordPage() {
   const [term, setTerm] = useState("");
   const [definition, setDefinition] = useState("");
+  const [sentences, setSentences] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -20,6 +24,7 @@ function NewWord() {
       // Have to await the JSON parse to get your actual data object
       const data = await response.json();
       setDefinition(data);
+      setSentences(data.example_sentences);
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,27 +47,22 @@ function NewWord() {
 
   return (
     <div>
-      <input
-        type="text"
+      <TextInput
         value={term}
         onChange={handleChange}
-        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-      ></input>
-      <button
-        className="border-purple-200 text-white-500 hover:border-transparent hover:bg-purple-600 hover:text-white active:bg-purple-700 ..."
-        onClick={handleSubmit}
-      >
-        Submit
-      </button>
+        placeholder="I want to learn about..."
+      ></TextInput>
+      <Button onClick={handleSubmit} text="mnemo!" />
       {loading && <p>Loading...</p>}
-      <div className="bg-white shadow-md mt-2 rounded-lg p-6 max-w-sm">
-        <h2 className="text-xl font-semibold text-gray-800">
-          毎日コーヒーを飲みます。
-        </h2>
-        <p className="text-gray-600">I drink coffee every day.</p>
-      </div>
+      {sentences.map(({ sentence, translation }, index) => (
+        <SentenceCard
+          key={index}
+          exampleSentence={sentence}
+          translation={translation}
+        />
+      ))}
     </div>
   );
 }
 
-export default NewWord;
+export default NewWordPage;
