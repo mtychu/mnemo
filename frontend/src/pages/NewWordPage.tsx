@@ -2,10 +2,12 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import Button from "../components/Button";
 import TextInput from "../components/TextInput";
 import SentenceCard from "../components/SentenceCard";
+import Definition, { type DefinitionProps } from "../components/Definition";
 
 function NewWordPage() {
   const [term, setTerm] = useState("");
-  const [definition, setDefinition] = useState("");
+  const [definition, setDefinition] = useState<DefinitionProps | null>(null);
+  // useState can be DefinitionProps or null, defaulted to null.
   const [sentences, setSentences] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +25,17 @@ function NewWordPage() {
       });
       // Have to await the JSON parse to get your actual data object
       const data = await response.json();
-      setDefinition(data);
+      const normalizedDefinition: DefinitionProps = {
+        term: data.term,
+        pronounciation: data.pronounciation,
+        partOfSpeech: data.part_of_speech,
+        tlDefinition: data.tl_definition,
+        engDefinition: data.eng_definition,
+        usageNotes: data.usage_notes,
+        cautions: data.cautions,
+      };
+
+      setDefinition(normalizedDefinition);
       setSentences(data.example_sentences);
     } catch (err) {
       console.error(err);
@@ -37,9 +49,9 @@ function NewWordPage() {
   };
 
   // When [word] changes, then run useEffect(), can have multiple
-  useEffect(() => {
-    console.log(term);
-  }, [term]);
+  // useEffect(() => {
+  //   console.log(term);
+  // }, [term]);
 
   useEffect(() => {
     console.log(definition);
@@ -50,10 +62,11 @@ function NewWordPage() {
       <TextInput
         value={term}
         onChange={handleChange}
-        placeholder="I want to learn about..."
+        placeholder="What to look up?"
       ></TextInput>
       <Button onClick={handleSubmit} text="mnemo!" />
       {loading && <p>Loading...</p>}
+      {definition && <Definition {...definition} />}
       {sentences.map(({ sentence, translation }, index) => (
         <SentenceCard
           key={index}
