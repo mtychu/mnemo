@@ -62,9 +62,9 @@ function NewWordPage() {
       <TextInput
         value={term}
         onChange={handleChange}
-        placeholder="What to look up?"
+        placeholder="what does it mean?"
       ></TextInput>
-      <Button onClick={handleSubmit} text="mnemo!" />
+      <Button onClick={handleSubmit} text="mnemo!"></Button>
       {loading && <p>Loading...</p>}
       {definition && <Definition {...definition} />}
       {sentences.map(({ sentence, translation }, index) => (

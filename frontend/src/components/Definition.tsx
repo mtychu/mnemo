@@ -33,13 +33,13 @@ function Definition({
   cautions,
 }: DefinitionProps) {
   return (
-    <div className="p-4 border rounded mb-2">
+    <div className="p-4 border rounded-2xl mb-2 mt-5 max-w-xl">
       <h2>{term}</h2>
       <p>{pronounciation}</p>
       <p>{partOfSpeech}</p>
-      <p>
-        {tlDefinition} | {engDefinition}
-      </p>
+      <p>{tlDefinition}</p>
+      <p>{engDefinition}</p>
+      <p> - </p>
       <p>
         {usageNotes} {cautions}
       </p>
