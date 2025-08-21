@@ -1,14 +1,11 @@
 import { useState } from "react";
-
-type SentenceCardProps = {
-  exampleSentence?: string;
-  translation?: string;
-};
+import type { ExampleSentenceAdd } from "../api/types";
 
 function SentenceCard({
-  exampleSentence = "毎日コーヒーを飲みます。",
+  sentence = "毎日コーヒーを飲みます。",
   translation = "I drink coffee every day.",
-}: SentenceCardProps) {
+  toAdd = false,
+}: ExampleSentenceAdd) {
   const [showTranslation, setShowTranslation] = useState(false);
 
   return (
@@ -20,7 +17,7 @@ function SentenceCard({
         aria-controls="translation"
         onClick={() => setShowTranslation((open) => !open)}
       >
-        <h2>{exampleSentence}</h2>
+        <h2>{sentence}</h2>
       </button>
       <p className={showTranslation ? "italic text-slate-600" : "hidden"}>
         {translation}

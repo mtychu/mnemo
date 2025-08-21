@@ -1,6 +1,6 @@
-export type DefinitionProps = {
+export type DefinitionCardProps = {
   term?: string;
-  pronounciation?: string;
+  pronunciation?: string;
   partOfSpeech?: string;
   tlDefinition?: string;
   engDefinition?: string;
@@ -12,7 +12,7 @@ export type DefinitionProps = {
 // function Definition({ definition }: { definition: DefinitionProps }) {
 //   const {
 //     term,
-//     pronounciation,
+//     pronunciation,
 //     partOfSpeech,
 //     tlDefinition,
 //     engDefinition,
@@ -23,19 +23,19 @@ export type DefinitionProps = {
 //   return <div>{term}</div>;
 // }
 
-function Definition({
+function DefinitionCard({
   term,
-  pronounciation,
+  pronunciation,
   partOfSpeech,
   tlDefinition,
   engDefinition,
   usageNotes,
   cautions,
-}: DefinitionProps) {
+}: DefinitionCardProps) {
   return (
-    <div className="p-4 border rounded-2xl mb-2 mt-5 max-w-xl">
+    <div className="mb-2 mt-5 max-w-xl rounded-2xl border p-4">
       <h2>{term}</h2>
-      <p>{pronounciation}</p>
+      <p>{pronunciation}</p>
       <p>{partOfSpeech}</p>
       <p>{tlDefinition}</p>
       <p>{engDefinition}</p>
@@ -47,4 +47,4 @@ function Definition({
   );
 }
 
-export default Definition;
+export default DefinitionCard;
