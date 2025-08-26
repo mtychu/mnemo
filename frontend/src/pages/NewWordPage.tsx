@@ -6,21 +6,31 @@ import SentenceCard from "../components/SentenceCard";
 import { getAIVocabInfo } from "../api/client";
 import { type ExampleSentence, type NormalizedVocabInfo } from "../api/types";
 
+// Shape used in UI state: API sentence + toggle flag
+type ExampleSentenceAdd = ExampleSentence & {
+  toAdd: boolean;
+};
+
 function NewWordPage() {
   const [term, setTerm] = useState("");
   const [vocabInfo, setVocabInfo] = useState<NormalizedVocabInfo | undefined>(
     undefined,
   );
   // useState can be NormalizedVocab or null, defaulted to null.
-  const [sentences, setSentences] = useState<ExampleSentence[]>([]);
+  const [sentences, setSentences] = useState<ExampleSentenceAdd[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleGetVocab = async () => {
     setLoading(true);
     try {
       const data = await getAIVocabInfo("Japanese", term);
       setVocabInfo(data);
-      setSentences(data?.exampleSentences ?? []);
+      setSentences(
+        data?.exampleSentences.map((s) => ({
+          ...s,
+          toAdd: false,
+        })) ?? [],
+      ); // If data exists use map to add a toAdd key, otherwise use empty array.
     } catch (err) {
       console.error(err);
     } finally {
@@ -31,6 +41,13 @@ function NewWordPage() {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setTerm(e.target.value);
   };
+
+  const toggleToAdd = (idx: number) =>
+    setSentences((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], toAdd: !next[idx].toAdd };
+      return next;
+    });
 
   // When [definition] changes, then run useEffect(), can have multiple
   useEffect(() => {
@@ -45,14 +62,16 @@ function NewWordPage() {
         onChange={handleChange}
         placeholder="... means?"
       ></TextInput>
-      <Button onClick={handleSubmit} text="mnemo!"></Button>
+      <Button onClick={handleGetVocab} text="mnemo!"></Button>
       {loading && <p>loading...</p>}
       {vocabInfo && <DefinitionCard {...vocabInfo} />}
-      {sentences.map(({ sentence, translation }, index) => (
+      {sentences.map(({ sentence, translation, toAdd }, index) => (
         <SentenceCard
           key={index}
           sentence={sentence}
           translation={translation}
+          toAdd={toAdd}
+          onToggleToAdd={() => toggleToAdd(index)}
         />
       ))}
     </div>

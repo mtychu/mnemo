@@ -4,11 +4,6 @@ export type ExampleSentence = {
   translation: string;
 };
 
-// Example sentence with boolean to determine if users understand the sentence
-export type ExampleSentenceAdd = ExampleSentence & {
-  toAdd: boolean;
-};
-
 export type VocabInfoFromAPI = {
   term: string;
   pronunciation: string;
