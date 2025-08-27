@@ -12,7 +12,6 @@ from typing import List
 
 # Model for new vocabulary, only includes fields from user-input
 class NewVocab(BaseModel):
-
     tl: str = Field(
         ...,
         alias="tl",
@@ -37,8 +36,6 @@ class Vocab(BaseModel):
     eng_definition: str
     usage_notes: str
     cautions: str
-    audio_url: str
-    user_notes: str | None = None
     example_sentences: List[ExampleSentence]
 
 
