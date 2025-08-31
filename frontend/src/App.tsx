@@ -1,10 +1,10 @@
 import "./App.css";
-import NewWord from "./components/NewWord";
+import NewWordPage from "./pages/NewWordPage";
 
 function App() {
   return (
     <>
-      <NewWord></NewWord>
+      <NewWordPage></NewWordPage>
     </>
   );
 }
