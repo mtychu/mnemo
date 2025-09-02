@@ -20,7 +20,7 @@ class NewVocab(BaseModel):
     term: str = Field(..., description="new term that the user wants to learn")
 
 
-# Model for
+# Model for an example sentence
 class ExampleSentence(BaseModel):
     sentence: str = Field(..., description="sentence in the user's target language")
     translation: str = Field(
@@ -28,6 +28,7 @@ class ExampleSentence(BaseModel):
     )
 
 
+# Model for a full vocabulary entry
 class Vocab(BaseModel):
     term: str
     pronunciation: str
@@ -39,7 +40,15 @@ class Vocab(BaseModel):
     example_sentences: List[ExampleSentence]
 
 
-class Sentence(BaseModel):
-    language: str
-    original: str
-    translation: str
+# Model for defnition portion of a vocabulary entry
+class VocabDefinition(BaseModel):
+    term: str
+    pronunciation: str
+    tl_definition: str
+    eng_definition: str
+
+
+# Model for notes portion of a vocabulary entry
+class VocabNotes(BaseModel):
+    usage_notes: str
+    cautions: str

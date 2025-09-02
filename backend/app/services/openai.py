@@ -1,63 +1,76 @@
 from openai import OpenAI
-from models.vocab import Vocab
+from models.vocab import VocabDefinition, VocabNotes, ExampleSentence
 
 client = OpenAI()
 
 
-def get_ai_vocab_data(tl: str, term: str):
+def get_ai_vocab_definition(tl: str, term: str):
     response = client.responses.parse(
-        model="gpt-5",
+        model="gpt-5-nano-2025-08-07",
         input=[
             {
                 "role": "system",
-                "content": "You are a skilled language tutor who produces concise, accurate answers.",
+                "content": """You are a skilled language tutor who produces concise,
+                              accurate answers.""",
             },
             {
                 "role": "user",
-                "content": f"""For the {tl} word '{term}', produce a JSON object in the following schema:
-
-                Vocab:
-                pronunciation: (string) pronunciation guide in the target language (e.g., furigana, pinyin)
-                part_of_speech: (string) part of speech in English
-                tl_definition: (string) definition in the target language
-                eng_definition: (string) definition in English
-                usage_notes: (string) concise usage tips in English
-                cautions: (string) any cautions or common mistakes in English
-                example_sentences: (list of exactly 3 objects) each with:
-                    - sentence: sentence in the target language
-                    - translation: translation of the sentence in English
-
-                Instructions:
-                - Return ONLY valid JSON that conforms exactly to the schema above.
-                - Do not include any extra text or commentary outside the JSON.
-                - All fields must be present and non-empty strings.
-                - Example sentences should be natural and varied.
-                - Keep definitions and notes concise.
-                """,
+                "content": f"""For the word '{term}' in {tl}, provide the following in a JSON object:
+                                term: (string) '{term}' in its most common or base form,
+                                pronounciation: (string) pronunciation guide typical for {tl},
+                                tl_definition: (string) a definition in {tl},
+                                eng_definition: (string) a definition in English""",
             },
         ],
-        text_format=Vocab,
+        text_format=VocabDefinition,
         reasoning={"effort": "low"},
         text={"verbosity": "low"},
     )
     print(response)
     return response.output[1].content[0].parsed
 
-    # {
-    #     "role": "system",
-    #     "content": """You are a skilled language tutor
-    #      specializing in helping people speak and write naturally.""",
-    # },
-    # {
-    #     "role": "user",
-    #     "content": f"""For the word '{term}' in {tl},
-    #      please provide the following:
-    #         - a definition in {tl}
-    #         - a definition in English
-    #         - non-english pronunciation guide e.g. furigana, pinyin
-    #         - the part of speech in English
-    #         - 3 example sentences in {tl} with their english translations
-    #           in different conjugations and contexts
-    #         - usage notes in English
-    #         - cautions in English""",
-    # },
+
+def get_ai_vocab_notes(tl: str, term: str):
+    response = client.responses.parse(
+        model="gpt-5-nano-2025-08-07",
+        input=[
+            {
+                "role": "system",
+                "content": """You are a skilled language tutor who produces concise, accurate answers.""",
+            },
+            {
+                "role": "user",
+                "content": f"""For the {tl} word '{term}', provide the following in a JSON object:
+                               usage_notes: (string) any notes about '{term}' that would be useful for English speakers,
+                               cautions: (string) any warnings or common mistakes English speakers might make when using '{term}'""",
+            },
+        ],
+        text_format=VocabNotes,
+        reasoning={"effort": "low"},
+        text={"verbosity": "low"},
+    )
+    print(response)
+    return response.output[1].content[0].parsed
+
+
+def get_ai_vocab_sentences(tl: str, term: str):
+    response = client.responses.parse(
+        model="gpt-5-nano-2025-08-07",
+        input=[
+            {
+                "role": "system",
+                "content": """You are a skilled language tutor who produces concise, accurate answers.""",
+            },
+            {
+                "role": "user",
+                "content": f"""Given ExampleSentence is an object with 'sentence' and 'translation' keys, for the {tl} word '{term}', provide the following in a JSON object:
+                               example_sentences: [exampleSentence] 3 example sentences in as many different contexts as possible 
+                    """,
+            },
+        ],
+        text_format=[ExampleSentence],
+        reasoning={"effort": "low"},
+        text={"verbosity": "low"},
+    )
+    print(response)
+    return response.output[1].content[0].parsed
