@@ -8,16 +8,9 @@ The app will then reach out to an AI service to fetch a detailed definition, inc
 
 The app will handle the card generation for you, creating a flashcard that includes the word, its nuances, and any additional information. In future iterations, the app could support multiple languages, various input methods, and even features like recording your location or capturing images of your surroundings to enhance word retention.
 
-For the MVP, the app should be able to:
-- Take in a word
-- Connect to a service to retrieve definitions, pronunciations, and example sentences
-- Generate a natural-sounding audio snippet to include in the card
-
-While direct integration with Anki isn't planned for the MVP, the data should be stored in a format that can be easily imported into Anki.
-
 ---
 
-## Tech Stack
+## Intended Tech Stack
 
 ### Frontend
 
@@ -42,33 +35,3 @@ While direct integration with Anki isn't planned for the MVP, the data should be
 - **AWS**: For hosting the web application and backend services.
 
 ---
-
-## First Steps
-
-### Frontend
-
-- [ ] Set up a React project using Create React App or Vite.
-- [ ] Design wireframes for the user interface, focusing on simplicity and usability.
-- [ ] Implement a basic layout with navigation and placeholder components for key features.
-
-### Backend
-
-- [ ] Initialize a FastAPI project and set up MongoDB for data storage.
-- [ ] Create API endpoints for user authentication, word lookup, and flashcard management.
-- [ ] Test the API with tools like Postman or Swagger UI.
-
-### Text-to-Speech
-
-- [ ] Integrate OpenAI Whisper for generating audio snippets.
-- [ ] Test the TTS functionality with sample words and sentences.
-
-### Integration with Anki
-
-- [ ] Explore the AnkiConnect API and test basic interactions, such as adding a card.
-- [ ] Design a data format that aligns with Anki's import requirements.
-
-### Deployment
-
-- [ ] Set up a Docker environment for the app.
-- [ ] Deploy the backend on AWS using services like EC2 or Elastic Beanstalk.
-- [ ] Host the frontend on AWS S3 or CloudFront for scalability.
