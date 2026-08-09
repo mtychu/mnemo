@@ -1,0 +1,2 @@
+# This folder stores downloaded dictionaries (CC-CEDICT, JMdict, etc.)
+# The actual dictionary files are gitignored - download them with `uv run mnemo download-dicts`

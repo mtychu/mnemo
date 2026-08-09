@@ -1,0 +1,23 @@
+[project]
+name = "mnemo"
+version = "0.1.0"
+description = "Automate Anki flashcard creation for language learning"
+readme = "README.md"
+authors = [
+    { name = "Morgan Chu", email = "morgan.m.chu@pwc.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+mnemo = "mnemo:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"

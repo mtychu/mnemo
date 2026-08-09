@@ -1,0 +1,81 @@
+# mnemo Roadmap
+
+## ✅ Phase 0: Setup (CURRENT)
+- [x] Project initialized with `uv`
+- [x] Git repository
+- [x] Folder structure
+- [ ] First commit
+
+---
+
+## 🚧 Phase 1: Chinese Vocabulary (Build First)
+
+**Goal:** End-to-end card creation for Chinese words
+
+- [ ] CC-CEDICT dictionary integration
+  - [ ] Download/parse CC-CEDICT
+  - [ ] SQLite caching for lookups
+- [ ] CSV word input
+- [ ] GUI review screen
+  - [ ] Mark words as known/unknown
+  - [ ] Edit definition/nuance before export
+- [ ] AnkiConnect integration
+  - [ ] Create "mnemo Vocab" note type
+  - [ ] Push cards with correct fields
+- [ ] TTS audio generation (word + sentences)
+- [ ] Context/source field support
+
+---
+
+## 🔮 Future (DO NOT BUILD YET)
+
+### Phase 2: Japanese Vocabulary
+- JMdict integration
+- Hiragana readings
+- Same workflow as Chinese
+
+### Phase 3: Grammar Cards
+- "mnemo Grammar" note type
+- Production/output practice cards
+- English prompt → target sentence
+
+### Phase 4: Advanced Features
+- Mobile + desktop companion app
+- Text ingestion (paste YouTube transcript, diff against known vocab)
+- Rotating/multi-context listening sentences
+- Templated grammar prompts with swappable slots
+- Images/screenshots on cards
+
+### Phase 5: Maintenance Tools
+- Consolidate existing Anki cards into consistent formats
+- Reorder unlearned prebuilt cards by frequency (common words first)
+- Monolingual definitions with English backup
+
+---
+
+## Design Decisions (Locked)
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Package manager | `uv` | Fast, modern, handles both deps and venvs |
+| Database | SQLite | Simple, portable, sufficient for caching |
+| Chinese dict | CC-CEDICT | Well-licensed, comprehensive ZH→EN |
+| Japanese dict | JMdict | Well-licensed, comprehensive JP→EN |
+| Anki integration | AnkiConnect | Standard API, works on desktop |
+| Platform | macOS + Linux | Your work + personal machines |
+| Language priority | Chinese first | Heritage speaker = simpler to validate |
+
+## Note Types
+
+### mnemo Vocab (Chinese + Japanese)
+Fields: Expression, Reading, Zhuyin, Definition, Nuance, ExampleSentence, ExampleAudio, ExpressionAudio, Language, Context, Image
+
+Card templates:
+1. **Listening** — Front: audio only → Back: everything
+2. **Reading** — Front: word → Back: definition + sentence
+
+### mnemo Grammar
+Fields: GrammarPoint, EnglishPrompt, TargetSentence, Explanation, TargetAudio, Language, Context, Image
+
+Card template:
+1. **Production** — Front: English prompt → Back: target sentence + explanation

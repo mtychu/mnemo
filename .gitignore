@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Dictionary data (large files - download separately)
+data/*.txt
+data/*.gz
+data/*.zip
+
+# SQLite databases
+*.db
+*.sqlite
