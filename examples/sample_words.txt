@@ -1,0 +1,13 @@
+# Sample word list for testing
+# Lines starting with # are comments
+
+你好
+謝謝
+電腦
+學習
+吃飯
+睡覺
+工作
+朋友
+家人
+時間

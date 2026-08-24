@@ -13,7 +13,11 @@ wheels/
 data/*.txt
 data/*.gz
 data/*.zip
+data/*.u8
 
 # SQLite databases
 *.db
 *.sqlite
+
+# macOS
+.DS_Store
