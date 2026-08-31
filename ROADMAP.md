@@ -1,21 +1,21 @@
 # mnemo Roadmap
 
-## ✅ Phase 0: Setup (CURRENT)
+## ✅ Phase 0: Setup (COMPLETE)
 - [x] Project initialized with `uv`
 - [x] Git repository
 - [x] Folder structure
-- [ ] First commit
+- [x] First commit
 
 ---
 
-## 🚧 Phase 1: Chinese Vocabulary (Build First)
+## 🚧 Phase 1: Chinese Vocabulary (IN PROGRESS)
 
 **Goal:** End-to-end card creation for Chinese words
 
-- [ ] CC-CEDICT dictionary integration
-  - [ ] Download/parse CC-CEDICT
-  - [ ] SQLite caching for lookups
-- [ ] CSV word input
+- [x] CC-CEDICT dictionary integration
+  - [x] Download/parse CC-CEDICT
+  - [x] SQLite caching for lookups
+- [x] CSV/text word input (importer.py)
 - [ ] GUI review screen
   - [ ] Mark words as known/unknown
   - [ ] Edit definition/nuance before export
