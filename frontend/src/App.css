@@ -1,0 +1,232 @@
+/* mnemo - Chinese Dictionary Lookup */
+
+/* App container */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  padding: 24px 20px 16px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.5px;
+}
+
+.counts {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 4px 0 0;
+}
+
+.entry-count,
+.card-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.card-count {
+  color: var(--accent);
+}
+
+/* Search */
+.search-container {
+  padding: 0 20px 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1.125rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: var(--text-h);
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Results */
+.results {
+  flex: 1;
+  padding: 0 20px 24px;
+}
+
+.no-results {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 20px;
+}
+
+.result-card {
+  padding: 16px;
+  margin-bottom: 12px;
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.result-card.clickable {
+  cursor: pointer;
+  transition: border-color 0.2s;
+  border: 1px solid transparent;
+}
+
+.result-card.clickable:hover {
+  border-color: var(--border);
+}
+
+.result-card.clickable:active {
+  background: var(--bg);
+}
+
+.result-card:last-child {
+  margin-bottom: 0;
+}
+
+.characters {
+  font-size: 1.5rem;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.traditional {
+  font-weight: 500;
+}
+
+.simplified {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-left: 8px;
+}
+
+.pinyin {
+  font-size: 0.9rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-family: var(--mono);
+}
+
+.definitions {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.definitions li {
+  margin-bottom: 4px;
+}
+
+.definitions li:last-child {
+  margin-bottom: 0;
+}
+
+/* Loading screen */
+.loading-screen,
+.error-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-screen h1,
+.error-screen h1 {
+  margin: 0 0 16px;
+  font-size: 2rem;
+  color: var(--text-h);
+}
+
+.progress-bar {
+  width: 200px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.error-screen button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+/* Import FAB button */
+.import-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 24px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.import-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.import-fab:active {
+  transform: scale(0.98);
+}
+
+/* Center FAB on wider screens */
+@media (min-width: 520px) {
+  .import-fab {
+    right: calc(50% - 240px + 24px);
+  }
+}
