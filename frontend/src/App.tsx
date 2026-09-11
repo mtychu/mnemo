@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { openMnemoDB, loadDictionary, search, isDictLoaded } from './db/dictionary'
+import { openMnemoDB, loadDictionary, search, isDictLoaded, filterKnownWords, importKnownWords } from './db/dictionary'
 import type { DictEntry } from './db/dictionary'
 import type { IDBPDatabase } from 'idb'
 import { ImportView, type ImportedWord } from './components/ImportView'
@@ -16,6 +16,7 @@ let initPromise: Promise<void> | null = null;
 function App() {
   const [view, setView] = useState<View>('lookup')
   const [importedWords, setImportedWords] = useState<ImportedWord[]>([])
+  const [alreadyKnownImportCount, setAlreadyKnownImportCount] = useState(0)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DictEntry[]>([])
   const [selectedEntry, setSelectedEntry] = useState<DictEntry | null>(null)
@@ -123,8 +124,32 @@ function App() {
   if (view === 'import') {
     return (
       <ImportView
-        onImport={(words) => {
-          setImportedWords(words)
+        onImportKnownWords={async (file) => {
+          if (!dbInstance) return
+
+          try {
+            const payload = JSON.parse(await file.text())
+            const words = Array.isArray(payload) ? payload : payload.words
+            if (!Array.isArray(words)) throw new Error('JSON does not contain a words array')
+
+            const added = await importKnownWords(dbInstance, words)
+            window.alert(`Imported ${added} new known words from Anki.`)
+          } catch (err) {
+            window.alert(err instanceof Error ? err.message : 'Could not import known words.')
+          }
+        }}
+        onImport={async (words) => {
+          if (!dbInstance) return
+
+          const unknownWords = await filterKnownWords(dbInstance, words)
+
+          if (unknownWords.length === 0) {
+            window.alert('All imported words are already in your vocabulary.')
+            return
+          }
+
+          setImportedWords(unknownWords)
+          setAlreadyKnownImportCount(words.length - unknownWords.length)
           setView('review')
         }}
         onBack={() => setView('lookup')}
@@ -138,6 +163,7 @@ function App() {
       <ReviewView
         words={importedWords}
         db={dbInstance}
+        alreadyKnownCount={alreadyKnownImportCount}
         onDone={() => {
           setImportedWords([])
           setView('lookup')

@@ -8,6 +8,7 @@ interface ImportedWord {
 
 interface ImportViewProps {
   onImport: (words: ImportedWord[]) => void
+  onImportKnownWords: (file: File) => void
   onBack: () => void
 }
 
@@ -18,8 +19,9 @@ interface ImportViewProps {
  * - CSV: word in first column, optional context in second
  * - Plain text: one word per line
  */
-export function ImportView({ onImport, onBack }: ImportViewProps) {
+export function ImportView({ onImport, onImportKnownWords, onBack }: ImportViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const knownWordsInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -79,6 +81,25 @@ export function ImportView({ onImport, onBack }: ImportViewProps) {
           onClick={() => fileInputRef.current?.click()}
         >
           Select File
+        </button>
+
+        <input
+          ref={knownWordsInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={event => {
+            const file = event.target.files?.[0]
+            if (file) onImportKnownWords(file)
+            event.target.value = ''
+          }}
+          style={{ display: 'none' }}
+        />
+
+        <button
+          className="import-btn secondary-import-btn"
+          onClick={() => knownWordsInputRef.current?.click()}
+        >
+          Import known words from Anki JSON
         </button>
 
         <div className="format-help">

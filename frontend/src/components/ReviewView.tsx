@@ -4,11 +4,13 @@ import type { DictEntry } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
 import type { ImportedWord } from './ImportView'
 import { getContext, getExample, speak, type ContextResponse, type ExampleResponse } from '../api/enrichment'
+import { addCard, createCardFromEntry, hasCard } from '../db/cards'
 import './ReviewView.css'
 
 interface ReviewViewProps {
   words: ImportedWord[]
   db: IDBPDatabase<any>
+  alreadyKnownCount: number
   onDone: () => void
 }
 
@@ -24,7 +26,7 @@ type ReviewState = 'prompt' | 'lookup' | 'enriched' | 'done'
  * 4. Optional: "More context" for AI enrichment
  * 5. "Got it" to continue
  */
-export function ReviewView({ words, db, onDone }: ReviewViewProps) {
+export function ReviewView({ words, db, alreadyKnownCount, onDone }: ReviewViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [state, setState] = useState<ReviewState>('prompt')
   const [results, setResults] = useState<DictEntry[]>([])
@@ -50,6 +52,11 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
   const handleKnown = async () => {
     await addKnownWord(db, currentWord.word, currentWord.word, currentWord.word, 'review')
     setKnownCount(k => k + 1)
+    goNext()
+  }
+
+  const handleCancel = async () => {
+    await addKnownWord(db, currentWord.word, currentWord.word, currentWord.word, 'review-cancelled')
     goNext()
   }
 
@@ -112,7 +119,18 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
     }
   }
 
-  const handleGotIt = () => {
+  const handleAddCard = async () => {
+    const entry = results[0]
+
+    if (entry && !(await hasCard(db, entry.t))) {
+      const card = createCardFromEntry(entry, {
+        example: exampleData ?? undefined,
+        userContext: currentWord.context,
+      })
+      await addCard(db, card)
+    }
+
+    await addKnownWord(db, currentWord.word, currentWord.word, currentWord.word, 'card')
     goNext()
   }
 
@@ -123,6 +141,48 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
       setState('done')
     }
   }
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isTyping = target?.tagName === 'INPUT'
+        || target?.tagName === 'TEXTAREA'
+        || target?.tagName === 'SELECT'
+        || target?.isContentEditable
+
+      if (isTyping || event.metaKey || event.ctrlKey || event.altKey) return
+
+      switch (event.key.toLowerCase()) {
+        case 'k':
+          if (state === 'prompt') void handleKnown()
+          break
+        case 'l':
+          if (state === 'prompt') {
+            void handleLookup()
+          } else if (state === 'lookup' || state === 'enriched') {
+            void handleAddCard()
+          }
+          break
+        case 'enter':
+          if (state === 'lookup' || state === 'enriched') {
+            event.preventDefault()
+            void handleAddCard()
+          }
+          break
+        case 'x':
+          if (state === 'lookup' || state === 'enriched') void handleCancel()
+          break
+        case 'm':
+          if ((state === 'lookup' || state === 'enriched') && !loadingEnrichment) {
+            void handleMoreContext()
+          }
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [state, loadingEnrichment, currentWord.word])
 
   // Done screen
   if (state === 'done') {
@@ -160,7 +220,10 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
       </div>
 
       <div className="review-header">
-        <span className="counter">{currentIndex + 1} / {words.length}</span>
+        <div>
+          <span className="counter">{currentIndex + 1} / {words.length}</span>
+          <span className="import-summary">{words.length} new · {alreadyKnownCount} already known</span>
+        </div>
         <button className="skip-btn" onClick={onDone}>Exit</button>
       </div>
 
@@ -168,6 +231,11 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
       <div className="review-fixed">
         <div className="word-card">
           <div className="word-display">{currentWord.word}</div>
+          {(state === 'lookup' || state === 'enriched') && (
+            <button className="cancel-btn" onClick={handleCancel} title="Cancel and add to vocabulary (X)" data-shortcut="X">
+              ×
+            </button>
+          )}
           {currentWord.context && (
             <div className="word-context">{currentWord.context}</div>
           )}
@@ -176,10 +244,10 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
         {/* Buttons stay below word */}
         {state === 'prompt' && (
           <div className="actions">
-            <button className="action-btn known" onClick={handleKnown}>
+            <button className="action-btn known" onClick={handleKnown} title="I know this (K)" data-shortcut="K">
               ✓ I know this
             </button>
-            <button className="action-btn lookup" onClick={handleLookup}>
+            <button className="action-btn lookup" onClick={handleLookup} title="Look it up (L)" data-shortcut="L">
               ? Look it up
             </button>
           </div>
@@ -191,10 +259,12 @@ export function ReviewView({ words, db, onDone }: ReviewViewProps) {
               className="secondary-btn" 
               onClick={handleMoreContext}
               disabled={loadingEnrichment}
+              title="More context (M)"
+              data-shortcut="M"
             >
               {loadingEnrichment ? 'Loading...' : '💡 More context'}
             </button>
-            <button className="primary-btn" onClick={handleGotIt}>
+            <button className="primary-btn" onClick={handleAddCard} title="Add card (L or Enter)" data-shortcut="L / Enter">
               Add card →
             </button>
           </div>

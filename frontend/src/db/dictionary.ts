@@ -315,6 +315,33 @@ export async function addKnownWord(
 }
 
 /**
+ * Import known words from an external source such as Anki.
+ * Existing words are preserved and not counted as new imports.
+ */
+export async function importKnownWords(
+  db: IDBPDatabase<MnemoDBSchema>,
+  words: Array<Pick<KnownWord, 'word' | 'simplified' | 'traditional' | 'source'>>
+): Promise<number> {
+  const existing = new Set(await db.getAllKeys('knownWords'));
+  const transaction = db.transaction('knownWords', 'readwrite');
+  let added = 0;
+
+  for (const word of words) {
+    if (!word.word || existing.has(word.word)) continue;
+
+    await transaction.store.add({
+      ...word,
+      addedDate: new Date().toISOString(),
+    });
+    existing.add(word.word);
+    added += 1;
+  }
+
+  await transaction.done;
+  return added;
+}
+
+/**
  * Check if a word is known.
  */
 export async function isWordKnown(
@@ -323,6 +350,19 @@ export async function isWordKnown(
 ): Promise<boolean> {
   const entry = await db.get('knownWords', word);
   return entry !== undefined;
+}
+
+/**
+ * Remove words already present in the persistent vocabulary store.
+ *
+ * The generic item type lets callers retain extra fields such as CSV context.
+ */
+export async function filterKnownWords<T extends { word: string }>(
+  db: IDBPDatabase<MnemoDBSchema>,
+  items: T[]
+): Promise<T[]> {
+  const knownWords = new Set(await db.getAllKeys('knownWords'));
+  return items.filter(item => !knownWords.has(item.word));
 }
 
 /**

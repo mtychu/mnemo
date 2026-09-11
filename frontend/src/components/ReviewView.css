@@ -31,6 +31,13 @@
   color: var(--text-muted);
 }
 
+.import-summary {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 .skip-btn {
   background: none;
   border: none;
@@ -50,6 +57,7 @@
 
 /* Word card */
 .word-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -141,6 +149,57 @@
 .lookup-actions .primary-btn {
   flex: 1;
   margin-top: 0;
+}
+
+button[data-shortcut] {
+  position: relative;
+}
+
+button[data-shortcut]::after {
+  content: attr(data-shortcut);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: var(--text-h);
+  color: var(--bg);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 20;
+}
+
+button[data-shortcut]:hover::after,
+button[data-shortcut]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.cancel-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px;
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 400;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.cancel-btn:hover {
+  color: var(--text-h);
+  border-color: var(--text-muted);
 }
 
 /* TTS button */
