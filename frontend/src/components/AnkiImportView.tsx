@@ -8,8 +8,8 @@ import './AnkiImportView.css'
 interface AnkiImportViewProps {
   db: IDBPDatabase<any>
   onBack: () => void
-  onLearnedWords: (words: ImportedWord[]) => void
-  onSuspendedWords: (words: ImportedWord[]) => void
+  onLearnedWords: (words: ImportedWord[]) => Promise<number>
+  onSuspendedWords: (words: ImportedWord[]) => Promise<void>
 }
 
 export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }: AnkiImportViewProps) {
@@ -87,8 +87,17 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
     setError(null)
     try {
       const words = preview.words.map(word => ({ word: word.word, context: 'Imported from Anki' }))
-      if (mode === 'learned') onLearnedWords(words)
-      else onSuspendedWords(words)
+      if (mode === 'learned') {
+        const added = await onLearnedWords(words)
+        const alreadyPresent = words.length - added
+        setMessage(
+          alreadyPresent > 0
+            ? `Added ${added} new words. ${alreadyPresent} were already in your vocabulary.`
+            : `Added ${added} new words to your known vocabulary.`,
+        )
+      } else {
+        await onSuspendedWords(words)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import Anki words.')
     } finally {
@@ -179,7 +188,7 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
                 </div>
                 <button className="anki-import-btn" onClick={handleImport} disabled={working || preview.words.length === 0}>
                   {mode === 'learned'
-                    ? `Add ${preview.words.length} words to known vocabulary`
+                    ? `Import ${preview.words.length} candidates`
                     : `Add ${preview.words.length} words to review queue`}
                 </button>
               </section>
