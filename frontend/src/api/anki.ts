@@ -105,6 +105,15 @@ function tokenizeChinese(sentence: string): string[] {
   return Array.from(sentence.matchAll(/[\u3400-\u9fff]{2,4}/g), match => match[0])
 }
 
+function tokenizeVocabulary(value: string): string[] {
+  const normalized = normalizeChineseText(value)
+  const tokens = tokenizeChinese(normalized)
+
+  // Keep the original value as a fallback for an unusual but valid entry
+  // that the browser segmenter cannot split into Chinese tokens.
+  return tokens.length > 0 ? tokens : [normalized]
+}
+
 export async function previewAnkiImport(
   deck: string,
   noteType: string,
@@ -125,12 +134,13 @@ export async function previewAnkiImport(
   for (const note of notes) {
     const vocab = cleanField(note.fields[vocabField]?.value ?? '')
     const sentence = cleanField(note.fields[sentenceField]?.value ?? '')
+    const vocabWords = tokenizeVocabulary(vocab)
     const sentenceWords = mode === 'learned'
       ? tokenizeChinese(sentence).filter(word => word.length > 1 && !FUNCTION_WORDS.has(word))
       : []
     const candidates = [
-      { word: vocab, kind: 'vocabulary' as const },
       ...sentenceWords.map(word => ({ word, kind: 'example' as const })),
+      ...vocabWords.map(word => ({ word, kind: 'vocabulary' as const })),
     ]
 
     for (const candidate of candidates) {
