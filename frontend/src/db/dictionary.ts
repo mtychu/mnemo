@@ -62,6 +62,33 @@ interface MnemoDBSchema extends DBSchema {
       'traditional': string;
     };
   };
+  cards: {
+    key: number;
+    value: {
+      id?: number;
+      word: string;
+      traditional: string;
+      simplified: string;
+      pinyin: string;
+      definitions: string[];
+      nuance?: string;
+      collocations?: string[];
+      notes?: string;
+      exampleSentence?: string;
+      exampleTranslation?: string;
+      exampleReading?: string;
+      userNotes?: string;
+      context?: string;
+      language: 'zh' | 'ja';
+      createdAt: string;
+      lastReviewed?: string;
+      reviewCount: number;
+    };
+    indexes: {
+      'word': string;
+      'createdAt': string;
+    };
+  };
   meta: {
     key: string;              // Metadata key (e.g., "dictVersion")
     value: string;            // Metadata value

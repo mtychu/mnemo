@@ -43,6 +43,13 @@ export interface TTSRequest {
   speed?: 'slow' | 'normal' | 'fast'
 }
 
+export interface SpeakOptions {
+  // For Chinese, indicate whether the primary text is traditional or simplified.
+  zhScript?: 'traditional' | 'simplified'
+  // Optional alternate form (e.g., simplified fallback for zh-CN voices).
+  fallbackText?: string
+}
+
 // ============================================================
 // PLACEHOLDER IMPLEMENTATIONS
 // These will be replaced with real API calls
@@ -119,85 +126,108 @@ export async function getTTS(req: TTSRequest): Promise<string | null> {
   return null
 }
 
-// Preload voices for offline fallback (they load asynchronously)
-if ('speechSynthesis' in window) {
-  speechSynthesis.getVoices()
-  speechSynthesis.onvoiceschanged = () => {}
+/**
+ * Wait until browser voices are available.
+ */
+async function getVoicesReady(): Promise<SpeechSynthesisVoice[]> {
+  if (!('speechSynthesis' in window)) return []
+
+  const synth = speechSynthesis
+  let voices = synth.getVoices()
+  if (voices.length > 0) return voices
+
+  voices = await new Promise<SpeechSynthesisVoice[]>((resolve) => {
+    const timeout = window.setTimeout(() => resolve(synth.getVoices()), 1200)
+    synth.onvoiceschanged = () => {
+      window.clearTimeout(timeout)
+      resolve(synth.getVoices())
+    }
+    // Trigger voice list loading in some browsers.
+    synth.getVoices()
+  })
+
+  return voices
 }
 
-/**
- * Play TTS using ResponsiveVoice.js (free for non-commercial use).
- * Falls back to browser TTS if RV not loaded or offline.
- */
-let rvLoaded = false
-let rvLoading = false
+function pickVoice(
+  voices: SpeechSynthesisVoice[],
+  language: Language,
+  preferOnline: boolean,
+  zhScript: 'traditional' | 'simplified'
+): SpeechSynthesisVoice | undefined {
+  const candidates = voices.filter(v => v.lang.toLowerCase().startsWith(language))
+  if (candidates.length === 0) return undefined
 
-async function loadResponsiveVoice(): Promise<boolean> {
-  if (rvLoaded) return true
-  if (rvLoading) {
-    // Wait for existing load
-    await new Promise(r => setTimeout(r, 500))
-    return rvLoaded
-  }
-  
-  rvLoading = true
-  return new Promise((resolve) => {
-    const script = document.createElement('script')
-    script.src = 'https://code.responsivevoice.org/responsivevoice.js?key=free'
-    script.onload = () => {
-      rvLoaded = true
-      rvLoading = false
-      resolve(true)
-    }
-    script.onerror = () => {
-      rvLoading = false
-      resolve(false)
-    }
-    document.head.appendChild(script)
+  const onlineFirst = [...candidates].sort((a, b) => {
+    const scoreA = (a.localService ? 0 : 2) + (a.default ? 1 : 0)
+    const scoreB = (b.localService ? 0 : 2) + (b.default ? 1 : 0)
+    return scoreB - scoreA
   })
+  const localFirst = [...candidates].sort((a, b) => {
+    const scoreA = (a.localService ? 2 : 0) + (a.default ? 1 : 0)
+    const scoreB = (b.localService ? 2 : 0) + (b.default ? 1 : 0)
+    return scoreB - scoreA
+  })
+
+  const ordered = preferOnline ? onlineFirst : localFirst
+
+  if (language !== 'zh') return ordered[0]
+
+  const zhTraditional = ordered.find(v => /(zh-tw|zh-hk|hant)/i.test(v.lang))
+  const zhSimplified = ordered.find(v => /(zh-cn|zh-sg|hans)/i.test(v.lang))
+
+  if (zhScript === 'traditional') return zhTraditional ?? ordered[0]
+  return zhSimplified ?? ordered[0]
 }
 
 /**
  * Play TTS audio.
- * 
+ *
  * Strategy:
- * 1. Try ResponsiveVoice (good Chinese support, free for non-commercial)
- * 2. Fall back to browser speechSynthesis if offline or RV fails
+ * 1) If online, prefer non-local (cloud) browser voices
+ * 2) If offline, prefer local voices
+ * 3) For Chinese, prefer zh-TW/zh-HK when speaking traditional text
  */
-export async function speak(text: string, language: Language): Promise<void> {
-  // Try ResponsiveVoice first (online)
-  if (navigator.onLine) {
-    const loaded = await loadResponsiveVoice()
-    if (loaded && (window as any).responsiveVoice) {
-      const rv = (window as any).responsiveVoice
-      const voice = language === 'zh' ? 'Chinese Female' : 'Japanese Female'
-      
-      return new Promise((resolve) => {
-        rv.speak(text, voice, {
-          rate: 0.9,
-          onend: () => resolve()
-        })
-      })
-    }
+export async function speak(
+  text: string,
+  language: Language,
+  options?: SpeakOptions
+): Promise<void> {
+  if (!('speechSynthesis' in window)) return
+
+  const synth = speechSynthesis
+  synth.cancel()
+  await new Promise(r => setTimeout(r, 40))
+
+  const voices = await getVoicesReady()
+  const preferOnline = navigator.onLine
+  const zhScript = options?.zhScript ?? 'traditional'
+
+  const chosenVoice = pickVoice(voices, language, preferOnline, zhScript)
+
+  let spokenText = text
+  if (
+    language === 'zh' &&
+    chosenVoice &&
+    options?.fallbackText &&
+    /(zh-cn|zh-sg|hans)/i.test(chosenVoice.lang)
+  ) {
+    spokenText = options.fallbackText
   }
-  
-  // Fallback: browser's built-in TTS
-  if ('speechSynthesis' in window) {
-    speechSynthesis.cancel()
-    await new Promise(r => setTimeout(r, 50))
-    
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = language === 'zh' ? 'zh-CN' : 'ja'
-    utterance.rate = 0.85
-    
-    const voices = speechSynthesis.getVoices()
-    const matchingVoice = voices.find(v => v.lang.startsWith(language))
-    if (matchingVoice) {
-      utterance.voice = matchingVoice
-    }
-    
-    speechSynthesis.speak(utterance)
-  }
+
+  const utterance = new SpeechSynthesisUtterance(spokenText)
+  utterance.lang =
+    language === 'zh'
+      ? (zhScript === 'traditional' ? 'zh-TW' : 'zh-CN')
+      : 'ja-JP'
+  utterance.rate = 0.85
+  if (chosenVoice) utterance.voice = chosenVoice
+
+  await new Promise<void>((resolve) => {
+    utterance.onend = () => resolve()
+    utterance.onerror = () => resolve()
+    synth.speak(utterance)
+  })
 }
 
 // ============================================================

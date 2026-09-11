@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { DictEntry } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
 import { getContext, getExample, speak, type ContextResponse, type ExampleResponse } from '../api/enrichment'
@@ -26,17 +26,22 @@ export function WordDetail({ entry, db, userContext, onClose, onCardAdded }: Wor
   const [userNotes, setUserNotes] = useState('')
 
   // Check if card exists on mount
-  useState(() => {
+  useEffect(() => {
     hasCard(db, entry.t).then(setCardExists)
-  })
+  }, [db, entry.t])
 
   const handleSpeak = () => {
-    speak(entry.t, 'zh')
+    speak(entry.t, 'zh', {
+      zhScript: 'traditional',
+      fallbackText: entry.s
+    })
   }
 
   const handleSpeakSentence = () => {
     if (exampleData?.sentence) {
-      speak(exampleData.sentence, 'zh')
+      speak(exampleData.sentence, 'zh', {
+        zhScript: 'traditional'
+      })
     }
   }
 
