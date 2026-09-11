@@ -77,7 +77,7 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
     try {
       const words = preview.words.filter(word => selectedWords.has(word.word))
       const added = await importKnownWords(db, words)
-      setMessage(`Added ${added} new words to your vocabulary.`)
+      setMessage(`Added ${added} new learned words to your vocabulary.`)
       onImported()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import Anki words.')
@@ -155,7 +155,7 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
                   ))}
                 </div>
                 <button className="anki-import-btn" onClick={handleImport} disabled={working || selectedWords.size === 0}>
-                  Import {selectedWords.size} selected words
+                  Add {selectedWords.size} selected words
                 </button>
               </section>
             )}
