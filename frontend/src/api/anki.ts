@@ -22,6 +22,8 @@ export interface AnkiPreview {
   words: AnkiWord[]
 }
 
+export type AnkiImportMode = 'learned' | 'suspended'
+
 async function invoke<T>(action: string, params: Record<string, unknown> = {}): Promise<T> {
   let response: Response
 
@@ -89,8 +91,10 @@ export async function previewAnkiImport(
   noteType: string,
   vocabField: string,
   sentenceField: string,
+  mode: AnkiImportMode,
 ): Promise<AnkiPreview> {
-  const query = `deck:"${deck}" note:"${noteType}" is:review -is:suspended`
+  const stateQuery = mode === 'learned' ? 'is:review -is:suspended' : 'is:suspended'
+  const query = `deck:"${deck}" note:"${noteType}" ${stateQuery}`
   const cardIds = await invoke<number[]>('findCards', { query })
   if (cardIds.length === 0) return { learnedNotes: 0, words: [] }
 
@@ -102,7 +106,9 @@ export async function previewAnkiImport(
   for (const note of notes) {
     const vocab = cleanField(note.fields[vocabField]?.value ?? '')
     const sentence = cleanField(note.fields[sentenceField]?.value ?? '')
-    const candidates = [vocab, ...tokenizeChinese(sentence)]
+    const candidates = mode === 'learned'
+      ? [vocab, ...tokenizeChinese(sentence)]
+      : [vocab]
 
     for (const word of candidates) {
       if (!word) continue

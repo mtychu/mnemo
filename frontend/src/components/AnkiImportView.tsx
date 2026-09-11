@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react'
-import { getAnkiOptions, previewAnkiImport, type AnkiModel, type AnkiPreview } from '../api/anki'
+import { getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
 import { importKnownWords } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
+import type { ImportedWord } from './ImportView'
 import './AnkiImportView.css'
 
 interface AnkiImportViewProps {
   db: IDBPDatabase<any>
   onBack: () => void
   onImported: () => void
+  onSuspendedWords: (words: ImportedWord[]) => void
 }
 
-export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) {
+export function AnkiImportView({ db, onBack, onImported, onSuspendedWords }: AnkiImportViewProps) {
   const [decks, setDecks] = useState<string[]>([])
   const [models, setModels] = useState<AnkiModel[]>([])
   const [deck, setDeck] = useState('')
   const [modelName, setModelName] = useState('')
   const [vocabField, setVocabField] = useState('')
   const [sentenceField, setSentenceField] = useState('')
+  const [mode, setMode] = useState<AnkiImportMode>('learned')
   const [preview, setPreview] = useState<AnkiPreview | null>(null)
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
@@ -51,7 +54,7 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
     setError(null)
     setMessage(null)
     try {
-      const result = await previewAnkiImport(deck, modelName, vocabField, sentenceField)
+      const result = await previewAnkiImport(deck, modelName, vocabField, sentenceField, mode)
       setPreview(result)
       setSelectedWords(new Set(result.words.map(word => word.word)))
     } catch (err) {
@@ -76,9 +79,13 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
     setError(null)
     try {
       const words = preview.words.filter(word => selectedWords.has(word.word))
-      const added = await importKnownWords(db, words)
-      setMessage(`Added ${added} new learned words to your vocabulary.`)
-      onImported()
+      if (mode === 'learned') {
+        const added = await importKnownWords(db, words)
+        setMessage(`Added ${added} new learned words to your vocabulary.`)
+        onImported()
+      } else {
+        onSuspendedWords(words.map(word => ({ word: word.word, context: '' })))
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import Anki words.')
     } finally {
@@ -95,7 +102,7 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
 
       <div className="anki-import-content">
         <p className="anki-intro">
-          Import learned vocabulary and words from example sentences. New and suspended cards are excluded.
+          Import learned vocabulary into your known-word store, or send suspended vocabulary through a fresh review.
         </p>
 
         {loading && <p className="anki-status">Connecting to AnkiConnect...</p>}
@@ -103,6 +110,26 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
 
         {!loading && !error && (
           <>
+            <div className="anki-mode-toggle" role="group" aria-label="Anki card state">
+              <button
+                className={mode === 'learned' ? 'active' : ''}
+                onClick={() => { setMode('learned'); setPreview(null) }}
+              >
+                Learned cards
+              </button>
+              <button
+                className={mode === 'suspended' ? 'active' : ''}
+                onClick={() => { setMode('suspended'); setPreview(null) }}
+              >
+                Suspended cards
+              </button>
+            </div>
+            <p className="anki-mode-help">
+              {mode === 'learned'
+                ? 'Imports the target vocabulary plus words from example sentences. Suspended cards are excluded.'
+                : 'Imports only the target vocabulary from suspended cards so mnemo can create fresh cards.'}
+            </p>
+
             <label>Deck
               <select value={deck} onChange={event => setDeck(event.target.value)}>
                 {decks.map(option => <option key={option} value={option}>{option}</option>)}
@@ -136,7 +163,7 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
                 <div className="anki-preview-header">
                   <div>
                     <strong>{preview.words.length} words found</strong>
-                    <span>{preview.learnedNotes} learned notes</span>
+                    <span>{preview.learnedNotes} {mode === 'learned' ? 'learned' : 'suspended'} notes</span>
                   </div>
                   <button className="anki-select-btn" onClick={() => setSelectedWords(new Set(preview.words.map(word => word.word)))}>
                     Select all
@@ -155,7 +182,7 @@ export function AnkiImportView({ db, onBack, onImported }: AnkiImportViewProps) 
                   ))}
                 </div>
                 <button className="anki-import-btn" onClick={handleImport} disabled={working || selectedWords.size === 0}>
-                  Add {selectedWords.size} selected words
+                  {mode === 'learned' ? 'Add' : 'Review'} {selectedWords.size} selected words
                 </button>
               </section>
             )}

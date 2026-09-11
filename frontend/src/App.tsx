@@ -165,6 +165,16 @@ function App() {
         db={dbInstance}
         onBack={() => setView('import')}
         onImported={() => setView('lookup')}
+        onSuspendedWords={async words => {
+          const unknownWords = await filterKnownWords(dbInstance, words)
+          if (unknownWords.length === 0) {
+            window.alert('All selected suspended words are already in your vocabulary.')
+            return
+          }
+          setImportedWords(unknownWords)
+          setAlreadyKnownImportCount(words.length - unknownWords.length)
+          setView('review')
+        }}
       />
     )
   }
