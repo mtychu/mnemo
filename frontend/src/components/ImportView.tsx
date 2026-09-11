@@ -117,6 +117,25 @@ export function ImportView({ onImport, onImportKnownWords, onImportFromAnki, onB
           <h3>Plain text example:</h3>
           <pre>便宜{'\n'}電腦{'\n'}學習</pre>
         </div>
+
+          <input
+            ref={knownWordsInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={event => {
+              const file = event.target.files?.[0]
+              if (file) onImportKnownWords(file)
+              event.target.value = ''
+            }}
+            style={{ display: 'none' }}
+          />
+
+          <button
+            className="backup-import-btn"
+            onClick={() => knownWordsInputRef.current?.click()}
+          >
+            Import backup
+          </button>
       </div>
     </div>
   )
