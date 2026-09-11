@@ -80,6 +80,45 @@
   font-size: 1rem;
 }
 
+.anki-field-example {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elevated);
+}
+
+.anki-field-example h2 {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.anki-field-example div + div {
+  margin-top: 12px;
+}
+
+.anki-field-example span,
+.anki-field-example strong {
+  display: block;
+}
+
+.anki-field-example span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.anki-field-example strong {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
 .anki-preview-btn,
 .anki-import-btn {
   width: 100%;

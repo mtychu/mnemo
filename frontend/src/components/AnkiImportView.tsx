@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getAnkiModelsForDeck, getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
+import { getAnkiFieldExample, getAnkiModelsForDeck, getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
 import { isDictionaryWord } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
 import type { ImportedWord } from './ImportView'
@@ -26,6 +26,7 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
   const [importing, setImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [fieldExample, setFieldExample] = useState<{ vocabulary: string; sentence: string } | null>(null)
   const importInProgress = useRef(false)
 
   const selectedModel = models.find(model => model.name === modelName)
@@ -61,6 +62,24 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
     setPreview(null)
     setMessage(null)
   }, [modelName])
+
+  useEffect(() => {
+    if (!deck || !modelName || !vocabField || !sentenceField) {
+      setFieldExample(null)
+      return
+    }
+
+    let cancelled = false
+    getAnkiFieldExample(deck, modelName, vocabField, sentenceField)
+      .then(example => {
+        if (!cancelled) setFieldExample(example)
+      })
+      .catch(() => {
+        if (!cancelled) setFieldExample(null)
+      })
+
+    return () => { cancelled = true }
+  }, [deck, modelName, vocabField, sentenceField])
 
   const handlePreview = async () => {
     setWorking(true)
@@ -172,6 +191,20 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
                 {selectedModel?.fields.map(field => <option key={field} value={field}>{field}</option>)}
               </select>
             </label>
+
+            {fieldExample && (
+              <section className="anki-field-example">
+                <h2>Field preview</h2>
+                <div>
+                  <span>Vocabulary</span>
+                  <strong>{fieldExample.vocabulary || 'No value in sample note'}</strong>
+                </div>
+                <div>
+                  <span>Example sentence</span>
+                  <strong>{fieldExample.sentence || 'No value in sample note'}</strong>
+                </div>
+              </section>
+            )}
 
             <button className="anki-preview-btn" onClick={handlePreview} disabled={working || !deck || !modelName}>
               {working ? 'Working...' : `Preview ${mode === 'learned' ? 'learned' : 'suspended'} words`}

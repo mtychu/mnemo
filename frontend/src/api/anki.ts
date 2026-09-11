@@ -66,6 +66,32 @@ export async function getAnkiModelsForDeck(deck: string): Promise<AnkiModel[]> {
   })))
 }
 
+export async function getAnkiFieldExample(
+  deck: string,
+  noteType: string,
+  vocabField: string,
+  sentenceField: string,
+): Promise<{ vocabulary: string; sentence: string } | null> {
+  const cardIds = await invoke<number[]>('findCards', {
+    query: `deck:"${deck}" note:"${noteType}"`,
+  })
+  if (cardIds.length === 0) return null
+
+  const cards = await invoke<Array<{ note: number }>>('cardsInfo', {
+    cards: [cardIds[0]],
+  })
+  const notes = await invoke<Array<{ fields: Record<string, { value: string }> }>>('notesInfo', {
+    notes: [cards[0].note],
+  })
+  if (notes.length === 0) return null
+
+  const note = notes[0]
+  return {
+    vocabulary: cleanField(note.fields[vocabField]?.value ?? ''),
+    sentence: cleanField(note.fields[sentenceField]?.value ?? ''),
+  }
+}
+
 function cleanField(value: string): string {
   return value
     .replace(/<br\s*\/?>/gi, ' ')
