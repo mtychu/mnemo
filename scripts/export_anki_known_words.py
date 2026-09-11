@@ -1,18 +1,20 @@
-"""Export known vocabulary from AnkiConnect for import into mnemo.
+"""Export learned Chinese vocabulary from AnkiConnect for import into mnemo.
 
 Anki must be open with AnkiConnect enabled. The script only reads notes; it
 does not modify Anki.
 
 Examples:
     uv run python scripts/export_anki_known_words.py
-    uv run python scripts/export_anki_known_words.py --deck 中文
-    uv run python scripts/export_anki_known_words.py --field Expression --field Word \
-        --output data/anki_known_words.json
-    uv run python scripts/export_anki_known_words.py --list-fields
+    uv run python scripts/export_anki_known_words.py --deck 中文 \
+        --note-type "Chinese Recognition" --vocab-field Expression \
+        --sentence-field ExampleSentence
+    uv run python scripts/export_anki_known_words.py --list-options
 """
 
 import argparse
+import html
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -22,7 +24,7 @@ from urllib.request import Request, urlopen
 
 DEFAULT_URL = "http://localhost:8765"
 DEFAULT_DECK = "中文"
-DEFAULT_FIELDS = ("Expression", "Word", "Chinese", "Vocabulary")
+REVIEW_QUERY = "is:review -is:suspended"
 
 
 class AnkiConnectError(RuntimeError):
@@ -54,9 +56,9 @@ def invoke(action: str, **params: Any) -> Any:
     return result["result"]
 
 
-def build_query(deck: str | None) -> str:
-    """Build an Anki search query, optionally limited to one deck."""
-    return f'deck:"{deck}"' if deck else "*"
+def build_query(deck: str, note_type: str) -> str:
+    """Find learned, unsuspended cards for one deck and note type."""
+    return f'deck:"{deck}" note:"{note_type}" {REVIEW_QUERY}'
 
 
 def clean_field(value: str) -> str:
@@ -66,47 +68,69 @@ def clean_field(value: str) -> str:
     return value.strip()
 
 
-def export_words(fields: tuple[str, ...], deck: str | None) -> list[dict[str, str]]:
-    """Read and deduplicate vocabulary notes from Anki."""
-    card_ids = invoke("findCards", query=build_query(deck))
+def tokenize_sentence(sentence: str) -> list[str]:
+    """Split a Chinese example sentence into dictionary-like word candidates."""
+    try:
+        import jieba
+    except ImportError as exc:
+        raise AnkiConnectError(
+            "Sentence tokenization requires jieba. Run: uv add jieba"
+        ) from exc
+
+    sentence = html.unescape(re.sub(r"<[^>]+>", "", sentence))
+    return [
+        token.strip()
+        for token in jieba.lcut(sentence, HMM=True)
+        if re.search(r"[\u3400-\u9fff]", token)
+    ]
+
+
+def export_words(
+    deck: str,
+    note_type: str,
+    vocab_field: str,
+    sentence_field: str,
+    include_sentence_words: bool,
+) -> list[dict[str, str]]:
+    """Read learned notes and deduplicate vocabulary plus sentence words."""
+    card_ids = invoke("findCards", query=build_query(deck, note_type))
     if not card_ids:
         return []
 
     cards = invoke("cardsInfo", cards=card_ids)
+    note_ids = sorted({card["note"] for card in cards})
+    notes = invoke("notesInfo", notes=note_ids)
     words: dict[str, dict[str, str]] = {}
 
-    for card in cards:
-        card_fields = card.get("fields", {})
-        word = next(
-            (
-                clean_field(card_fields[field].get("value", ""))
-                for field in fields
-                if field in card_fields and card_fields[field].get("value", "").strip()
-            ),
-            "",
-        )
-        if not word:
-            continue
+    for note in notes:
+        fields = note.get("fields", {})
+        vocab = clean_field(fields.get(vocab_field, {}).get("value", ""))
+        sentence = clean_field(fields.get(sentence_field, {}).get("value", ""))
+        candidates = [vocab]
+        if include_sentence_words:
+            candidates.extend(tokenize_sentence(sentence))
 
-        words.setdefault(
-            word,
-            {
+        for word in candidates:
+            if not word:
+                continue
+            words.setdefault(word, {
                 "word": word,
                 "simplified": word,
                 "traditional": word,
                 "source": "anki",
-            },
-        )
+            })
 
     return sorted(words.values(), key=lambda item: item["word"])
 
 
-def print_model_fields() -> None:
-    """Print Anki's note types and fields for configuring this bridge."""
-    models = invoke("modelNamesAndFields")
-    for model_name, fields in models.items():
-        names = ", ".join(fields)
-        print(f"{model_name}: {names}")
+def print_options() -> None:
+    """Print decks and note types/fields for the import UI or CLI."""
+    print("Decks:")
+    for deck in invoke("deckNames"):
+        print(f"  {deck}")
+    print("\nNote types:")
+    for model_name, fields in invoke("modelNamesAndFields").items():
+        print(f"  {model_name}: {', '.join(fields)}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -114,18 +138,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--deck",
         default=DEFAULT_DECK,
-        help=f"Only export cards from this Anki deck (default: {DEFAULT_DECK}).",
+        help=f"Anki deck to import (default: {DEFAULT_DECK}).",
     )
     parser.add_argument(
-        "--field",
-        action="append",
-        dest="fields",
-        help="Note field containing the vocabulary. Repeat for multiple card types.",
+        "--note-type",
+        required=False,
+        help="Anki note type to import. One note type per run.",
     )
     parser.add_argument(
-        "--list-fields",
+        "--vocab-field",
+        required=False,
+        help="Field containing the target vocabulary.",
+    )
+    parser.add_argument(
+        "--sentence-field",
+        required=False,
+        help="Field containing an example sentence.",
+    )
+    parser.add_argument(
+        "--no-sentence-words",
         action="store_true",
-        help="Print every Anki note type and its fields, then exit.",
+        help="Export only the vocabulary field, without sentence tokenization.",
+    )
+    parser.add_argument(
+        "--list-options",
+        action="store_true",
+        help="Print decks and note fields, then exit.",
     )
     parser.add_argument(
         "--output",
@@ -138,17 +176,31 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    if args.list_fields:
-        print_model_fields()
+    if args.list_options:
+        print_options()
         return
 
-    fields = tuple(args.fields or DEFAULT_FIELDS)
-    words = export_words(fields=fields, deck=args.deck)
+    if not args.note_type or not args.vocab_field or not args.sentence_field:
+        raise SystemExit(
+            "--note-type, --vocab-field, and --sentence-field are required "
+            "(or use --list-options first)."
+        )
+
+    words = export_words(
+        deck=args.deck,
+        note_type=args.note_type,
+        vocab_field=args.vocab_field,
+        sentence_field=args.sentence_field,
+        include_sentence_words=not args.no_sentence_words,
+    )
     payload = {
         "exportedAt": datetime.now(timezone.utc).isoformat(),
         "source": "anki",
         "deck": args.deck,
-        "fields": list(fields),
+        "noteType": args.note_type,
+        "vocabField": args.vocab_field,
+        "sentenceField": args.sentence_field,
+        "includeSentenceWords": not args.no_sentence_words,
         "count": len(words),
         "words": words,
     }

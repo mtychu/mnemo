@@ -7,7 +7,9 @@ authors = [
     { name = "Morgan Chu", email = "morgan.m.chu@pwc.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "jieba>=0.42.1",
+]
 
 [project.optional-dependencies]
 dev = [
