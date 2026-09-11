@@ -167,7 +167,7 @@ function App() {
         db={dbInstance}
         onBack={() => setView('import')}
         onLearnedWords={async words => {
-          return importKnownWords(
+          const added = await importKnownWords(
             dbInstance,
             words.map(word => ({
               word: word.word,
@@ -176,6 +176,8 @@ function App() {
               source: 'anki',
             })),
           )
+          setView('anki-import')
+          return added
         }}
         onSuspendedWords={async words => {
           const unknownWords = await filterKnownWords(dbInstance, words)
