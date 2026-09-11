@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getAnkiModelsForDeck, getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
 import { isDictionaryWord } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
@@ -23,8 +23,10 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
   const [preview, setPreview] = useState<AnkiPreview | null>(null)
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const importInProgress = useRef(false)
 
   const selectedModel = models.find(model => model.name === modelName)
 
@@ -82,7 +84,10 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
   }
 
   const handleImport = async () => {
-    if (!preview) return
+    if (!preview || importInProgress.current) return
+
+    importInProgress.current = true
+    setImporting(true)
     setWorking(true)
     setError(null)
     try {
@@ -101,6 +106,8 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import Anki words.')
     } finally {
+      importInProgress.current = false
+      setImporting(false)
       setWorking(false)
     }
   }
@@ -186,10 +193,20 @@ export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }:
                     </div>
                   ))}
                 </div>
-                <button className="anki-import-btn" onClick={handleImport} disabled={working || preview.words.length === 0}>
-                  {mode === 'learned'
-                    ? `Import ${preview.words.length} candidates`
-                    : `Add ${preview.words.length} words to review queue`}
+                {importing && (
+                  <div className="anki-import-progress" role="status" aria-live="polite">
+                    <div className="anki-import-progress-track">
+                      <div className="anki-import-progress-fill" />
+                    </div>
+                    <span>Importing candidates...</span>
+                  </div>
+                )}
+                <button className="anki-import-btn" onClick={handleImport} disabled={working || importing || preview.words.length === 0}>
+                  {importing
+                    ? 'Importing...'
+                    : mode === 'learned'
+                      ? `Import ${preview.words.length} candidates`
+                      : `Add ${preview.words.length} words to review queue`}
                 </button>
               </section>
             )}
