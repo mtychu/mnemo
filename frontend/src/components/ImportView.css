@@ -56,6 +56,11 @@
   transition: opacity 0.2s;
 }
 
+.secondary-import-btn,
+.anki-import-page-btn {
+  margin-top: 12px;
+}
+
 .import-btn:hover {
   opacity: 0.9;
 }

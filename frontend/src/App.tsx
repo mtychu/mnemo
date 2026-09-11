@@ -5,9 +5,10 @@ import type { IDBPDatabase } from 'idb'
 import { ImportView, type ImportedWord } from './components/ImportView'
 import { ReviewView } from './components/ReviewView'
 import { WordDetail } from './components/WordDetail'
+import { AnkiImportView } from './components/AnkiImportView'
 import './App.css'
 
-type View = 'lookup' | 'import' | 'review'
+type View = 'lookup' | 'import' | 'anki-import' | 'review'
 
 // Module-level state to handle React StrictMode double-mount
 let dbInstance: IDBPDatabase<any> | null = null;
@@ -138,6 +139,7 @@ function App() {
             window.alert(err instanceof Error ? err.message : 'Could not import known words.')
           }
         }}
+        onImportFromAnki={() => setView('anki-import')}
         onImport={async (words) => {
           if (!dbInstance) return
 
@@ -153,6 +155,16 @@ function App() {
           setView('review')
         }}
         onBack={() => setView('lookup')}
+      />
+    )
+  }
+
+  if (view === 'anki-import' && dbInstance) {
+    return (
+      <AnkiImportView
+        db={dbInstance}
+        onBack={() => setView('import')}
+        onImported={() => setView('lookup')}
       />
     )
   }

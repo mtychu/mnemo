@@ -9,6 +9,7 @@ interface ImportedWord {
 interface ImportViewProps {
   onImport: (words: ImportedWord[]) => void
   onImportKnownWords: (file: File) => void
+  onImportFromAnki: () => void
   onBack: () => void
 }
 
@@ -19,7 +20,7 @@ interface ImportViewProps {
  * - CSV: word in first column, optional context in second
  * - Plain text: one word per line
  */
-export function ImportView({ onImport, onImportKnownWords, onBack }: ImportViewProps) {
+export function ImportView({ onImport, onImportKnownWords, onImportFromAnki, onBack }: ImportViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const knownWordsInputRef = useRef<HTMLInputElement>(null)
 
@@ -99,7 +100,14 @@ export function ImportView({ onImport, onImportKnownWords, onBack }: ImportViewP
           className="import-btn secondary-import-btn"
           onClick={() => knownWordsInputRef.current?.click()}
         >
-          Import known words from Anki JSON
+          Import known words from file
+        </button>
+
+        <button
+          className="import-btn anki-import-page-btn"
+          onClick={onImportFromAnki}
+        >
+          Import from Anki
         </button>
 
         <div className="format-help">
