@@ -129,7 +129,8 @@ def print_options() -> None:
     for deck in invoke("deckNames"):
         print(f"  {deck}")
     print("\nNote types:")
-    for model_name, fields in invoke("modelNamesAndFields").items():
+    for model_name in invoke("modelNames"):
+        fields = invoke("modelFieldNames", modelName=model_name)
         print(f"  {model_name}: {', '.join(fields)}")
 
 

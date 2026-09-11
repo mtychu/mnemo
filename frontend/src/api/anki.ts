@@ -48,17 +48,19 @@ async function invoke<T>(action: string, params: Record<string, unknown> = {}): 
 }
 
 export async function getAnkiOptions(): Promise<{ decks: string[]; models: AnkiModel[] }> {
-  const [decks, modelData] = await Promise.all([
+  const [decks, modelNames] = await Promise.all([
     invoke<string[]>('deckNames'),
-    invoke<Record<string, Record<string, unknown>>>('modelNamesAndFields'),
+    invoke<string[]>('modelNames'),
   ])
+
+  const models = await Promise.all(modelNames.map(async name => ({
+    name,
+    fields: await invoke<string[]>('modelFieldNames', { modelName: name }),
+  })))
 
   return {
     decks,
-    models: Object.entries(modelData).map(([name, fields]) => ({
-      name,
-      fields: Object.keys(fields),
-    })),
+    models,
   }
 }
 
