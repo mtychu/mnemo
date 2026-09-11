@@ -47,21 +47,23 @@ async function invoke<T>(action: string, params: Record<string, unknown> = {}): 
   return payload.result
 }
 
-export async function getAnkiOptions(): Promise<{ decks: string[]; models: AnkiModel[] }> {
-  const [decks, modelNames] = await Promise.all([
-    invoke<string[]>('deckNames'),
-    invoke<string[]>('modelNames'),
-  ])
+export async function getAnkiOptions(): Promise<{ decks: string[] }> {
+  return { decks: await invoke<string[]>('deckNames') }
+}
 
-  const models = await Promise.all(modelNames.map(async name => ({
+export async function getAnkiModelsForDeck(deck: string): Promise<AnkiModel[]> {
+  const cardIds = await invoke<number[]>('findCards', { query: `deck:"${deck}"` })
+  if (cardIds.length === 0) return []
+
+  const cards = await invoke<Array<{ note: number }>>('cardsInfo', { cards: cardIds })
+  const noteIds = [...new Set(cards.map(card => card.note))]
+  const notes = await invoke<Array<{ modelName: string }>>('notesInfo', { notes: noteIds })
+  const modelNames = [...new Set(notes.map(note => note.modelName))]
+
+  return Promise.all(modelNames.map(async name => ({
     name,
     fields: await invoke<string[]>('modelFieldNames', { modelName: name }),
   })))
-
-  return {
-    decks,
-    models,
-  }
 }
 
 function cleanField(value: string): string {

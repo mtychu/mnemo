@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
+import { getAnkiModelsForDeck, getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
 import { isDictionaryWord } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
 import type { ImportedWord } from './ImportView'
@@ -8,11 +8,11 @@ import './AnkiImportView.css'
 interface AnkiImportViewProps {
   db: IDBPDatabase<any>
   onBack: () => void
-  onQueueWords: (words: ImportedWord[]) => void
+  onLearnedWords: (words: ImportedWord[]) => void
   onSuspendedWords: (words: ImportedWord[]) => void
 }
 
-export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: AnkiImportViewProps) {
+export function AnkiImportView({ db, onBack, onLearnedWords, onSuspendedWords }: AnkiImportViewProps) {
   const [decks, setDecks] = useState<string[]>([])
   const [models, setModels] = useState<AnkiModel[]>([])
   const [deck, setDeck] = useState('')
@@ -32,13 +32,25 @@ export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: A
     getAnkiOptions()
       .then(options => {
         setDecks(options.decks)
-        setModels(options.models)
         setDeck(options.decks[0] ?? '')
-        setModelName(options.models[0]?.name ?? '')
       })
       .catch(err => setError(err instanceof Error ? err.message : 'Could not load Anki options.'))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!deck) return
+
+    setModels([])
+    setModelName('')
+    setError(null)
+    getAnkiModelsForDeck(deck)
+      .then(deckModels => {
+        setModels(deckModels)
+        setModelName(deckModels[0]?.name ?? '')
+      })
+      .catch(err => setError(err instanceof Error ? err.message : 'Could not load note types for this deck.'))
+  }, [deck])
 
   useEffect(() => {
     const fields = selectedModel?.fields ?? []
@@ -46,7 +58,7 @@ export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: A
     setSentenceField(fields[1] ?? fields[0] ?? '')
     setPreview(null)
     setMessage(null)
-  }, [modelName, selectedModel])
+  }, [modelName])
 
   const handlePreview = async () => {
     setWorking(true)
@@ -75,7 +87,7 @@ export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: A
     setError(null)
     try {
       const words = preview.words.map(word => ({ word: word.word, context: 'Imported from Anki' }))
-      if (mode === 'learned') onQueueWords(words)
+      if (mode === 'learned') onLearnedWords(words)
       else onSuspendedWords(words)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import Anki words.')
@@ -146,7 +158,7 @@ export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: A
             </label>
 
             <button className="anki-preview-btn" onClick={handlePreview} disabled={working || !deck || !modelName}>
-              {working ? 'Working...' : 'Preview learned words'}
+              {working ? 'Working...' : `Preview ${mode === 'learned' ? 'learned' : 'suspended'} words`}
             </button>
 
             {preview && (
@@ -166,7 +178,9 @@ export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: A
                   ))}
                 </div>
                 <button className="anki-import-btn" onClick={handleImport} disabled={working || preview.words.length === 0}>
-                  Add {preview.words.length} words to review queue
+                  {mode === 'learned'
+                    ? `Add ${preview.words.length} words to known vocabulary`
+                    : `Add ${preview.words.length} words to review queue`}
                 </button>
               </section>
             )}
