@@ -84,25 +84,6 @@ export function ImportView({ onImport, onImportKnownWords, onImportFromAnki, onB
           Select File
         </button>
 
-        <input
-          ref={knownWordsInputRef}
-          type="file"
-          accept=".json,application/json"
-          onChange={event => {
-            const file = event.target.files?.[0]
-            if (file) onImportKnownWords(file)
-            event.target.value = ''
-          }}
-          style={{ display: 'none' }}
-        />
-
-        <button
-          className="import-btn secondary-import-btn"
-          onClick={() => knownWordsInputRef.current?.click()}
-        >
-          Import known words from file
-        </button>
-
         <button
           className="import-btn anki-import-page-btn"
           onClick={onImportFromAnki}
@@ -118,24 +99,24 @@ export function ImportView({ onImport, onImportKnownWords, onImportFromAnki, onB
           <pre>便宜{'\n'}電腦{'\n'}學習</pre>
         </div>
 
-          <input
-            ref={knownWordsInputRef}
-            type="file"
-            accept=".json,application/json"
-            onChange={event => {
-              const file = event.target.files?.[0]
-              if (file) onImportKnownWords(file)
-              event.target.value = ''
-            }}
-            style={{ display: 'none' }}
-          />
+        <input
+          ref={knownWordsInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={event => {
+            const file = event.target.files?.[0]
+            if (file) onImportKnownWords(file)
+            event.target.value = ''
+          }}
+          style={{ display: 'none' }}
+        />
 
-          <button
-            className="backup-import-btn"
-            onClick={() => knownWordsInputRef.current?.click()}
-          >
-            Import backup
-          </button>
+        <button
+          className="backup-import-btn"
+          onClick={() => knownWordsInputRef.current?.click()}
+        >
+          Import backup
+        </button>
       </div>
     </div>
   )
