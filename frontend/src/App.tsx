@@ -18,6 +18,7 @@ function App() {
   const [view, setView] = useState<View>('lookup')
   const [importedWords, setImportedWords] = useState<ImportedWord[]>([])
   const [alreadyKnownImportCount, setAlreadyKnownImportCount] = useState(0)
+  const [reviewReturnView, setReviewReturnView] = useState<'lookup' | 'anki-import'>('lookup')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DictEntry[]>([])
   const [selectedEntry, setSelectedEntry] = useState<DictEntry | null>(null)
@@ -152,6 +153,7 @@ function App() {
 
           setImportedWords(unknownWords)
           setAlreadyKnownImportCount(words.length - unknownWords.length)
+          setReviewReturnView('lookup')
           setView('review')
         }}
         onBack={() => setView('lookup')}
@@ -172,6 +174,7 @@ function App() {
           }
           setImportedWords(unknownWords)
           setAlreadyKnownImportCount(words.length - unknownWords.length)
+          setReviewReturnView('anki-import')
           setView('review')
         }}
         onSuspendedWords={async words => {
@@ -182,6 +185,7 @@ function App() {
           }
           setImportedWords(unknownWords)
           setAlreadyKnownImportCount(words.length - unknownWords.length)
+          setReviewReturnView('anki-import')
           setView('review')
         }}
       />
@@ -197,7 +201,7 @@ function App() {
         alreadyKnownCount={alreadyKnownImportCount}
         onDone={() => {
           setImportedWords([])
-          setView('lookup')
+          setView(reviewReturnView)
         }}
       />
     )
