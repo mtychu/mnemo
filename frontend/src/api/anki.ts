@@ -15,6 +15,7 @@ export interface AnkiWord {
   simplified: string
   traditional: string
   source: string
+  kind: 'vocabulary' | 'example'
 }
 
 export interface AnkiPreview {
@@ -69,7 +70,21 @@ function cleanField(value: string): string {
     .trim()
 }
 
+const FUNCTION_WORDS = new Set([
+  '我', '你', '他', '她', '它', '的', '了', '嗎', '吗', '呢', '吧', '啊',
+  '在', '有', '是', '和', '跟', '與', '与', '也', '都', '很', '不', '沒', '没',
+  '這', '这', '那', '哪', '就', '才', '會', '会', '能', '要', '把', '被',
+])
+
+function normalizeChineseText(value: string): string {
+  return value
+    .replace(/[，。！？；：、“”‘’（）【】《》]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function tokenizeChinese(sentence: string): string[] {
+  sentence = normalizeChineseText(sentence)
   const Segmenter = (Intl as typeof Intl & {
     Segmenter?: new (locale: string, options: { granularity: string }) => {
       segment: (input: string) => Iterable<{ segment: string }>
@@ -83,7 +98,7 @@ function tokenizeChinese(sentence: string): string[] {
       .filter(word => /[\u3400-\u9fff]/.test(word))
   }
 
-  return Array.from(sentence.matchAll(/[\u3400-\u9fff]+/g), match => match[0])
+  return Array.from(sentence.matchAll(/[\u3400-\u9fff]{2,4}/g), match => match[0])
 }
 
 export async function previewAnkiImport(
@@ -106,17 +121,23 @@ export async function previewAnkiImport(
   for (const note of notes) {
     const vocab = cleanField(note.fields[vocabField]?.value ?? '')
     const sentence = cleanField(note.fields[sentenceField]?.value ?? '')
-    const candidates = mode === 'learned'
-      ? [vocab, ...tokenizeChinese(sentence)]
-      : [vocab]
+    const sentenceWords = mode === 'learned'
+      ? tokenizeChinese(sentence).filter(word => word.length > 1 && !FUNCTION_WORDS.has(word))
+      : []
+    const candidates = [
+      { word: vocab, kind: 'vocabulary' as const },
+      ...sentenceWords.map(word => ({ word, kind: 'example' as const })),
+    ]
 
-    for (const word of candidates) {
+    for (const candidate of candidates) {
+      const word = candidate.word
       if (!word) continue
       words.set(word, {
         word,
         simplified: word,
         traditional: word,
         source: 'anki',
+        kind: candidate.kind,
       })
     }
   }

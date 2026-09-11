@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAnkiOptions, previewAnkiImport, type AnkiImportMode, type AnkiModel, type AnkiPreview } from '../api/anki'
-import { importKnownWords } from '../db/dictionary'
+import { isDictionaryWord } from '../db/dictionary'
 import type { IDBPDatabase } from 'idb'
 import type { ImportedWord } from './ImportView'
 import './AnkiImportView.css'
@@ -8,11 +8,11 @@ import './AnkiImportView.css'
 interface AnkiImportViewProps {
   db: IDBPDatabase<any>
   onBack: () => void
-  onImported: () => void
+  onQueueWords: (words: ImportedWord[]) => void
   onSuspendedWords: (words: ImportedWord[]) => void
 }
 
-export function AnkiImportView({ db, onBack, onImported, onSuspendedWords }: AnkiImportViewProps) {
+export function AnkiImportView({ db, onBack, onQueueWords, onSuspendedWords }: AnkiImportViewProps) {
   const [decks, setDecks] = useState<string[]>([])
   const [models, setModels] = useState<AnkiModel[]>([])
   const [deck, setDeck] = useState('')
@@ -21,7 +21,6 @@ export function AnkiImportView({ db, onBack, onImported, onSuspendedWords }: Ank
   const [sentenceField, setSentenceField] = useState('')
   const [mode, setMode] = useState<AnkiImportMode>('learned')
   const [preview, setPreview] = useState<AnkiPreview | null>(null)
-  const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,8 +54,14 @@ export function AnkiImportView({ db, onBack, onImported, onSuspendedWords }: Ank
     setMessage(null)
     try {
       const result = await previewAnkiImport(deck, modelName, vocabField, sentenceField, mode)
-      setPreview(result)
-      setSelectedWords(new Set(result.words.map(word => word.word)))
+      const validatedWords = await Promise.all(result.words.map(async word => {
+        if (word.kind === 'vocabulary') return word
+        return await isDictionaryWord(db, word.word) ? word : null
+      }))
+      setPreview({
+        learnedNotes: result.learnedNotes,
+        words: validatedWords.filter(word => word !== null),
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not preview Anki notes.')
     } finally {
@@ -64,28 +69,14 @@ export function AnkiImportView({ db, onBack, onImported, onSuspendedWords }: Ank
     }
   }
 
-  const toggleWord = (word: string) => {
-    setSelectedWords(current => {
-      const next = new Set(current)
-      if (next.has(word)) next.delete(word)
-      else next.add(word)
-      return next
-    })
-  }
-
   const handleImport = async () => {
     if (!preview) return
     setWorking(true)
     setError(null)
     try {
-      const words = preview.words.filter(word => selectedWords.has(word.word))
-      if (mode === 'learned') {
-        const added = await importKnownWords(db, words)
-        setMessage(`Added ${added} new learned words to your vocabulary.`)
-        onImported()
-      } else {
-        onSuspendedWords(words.map(word => ({ word: word.word, context: '' })))
-      }
+      const words = preview.words.map(word => ({ word: word.word, context: 'Imported from Anki' }))
+      if (mode === 'learned') onQueueWords(words)
+      else onSuspendedWords(words)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import Anki words.')
     } finally {
@@ -165,24 +156,17 @@ export function AnkiImportView({ db, onBack, onImported, onSuspendedWords }: Ank
                     <strong>{preview.words.length} words found</strong>
                     <span>{preview.learnedNotes} {mode === 'learned' ? 'learned' : 'suspended'} notes</span>
                   </div>
-                  <button className="anki-select-btn" onClick={() => setSelectedWords(new Set(preview.words.map(word => word.word)))}>
-                    Select all
-                  </button>
                 </div>
                 <div className="anki-word-list">
                   {preview.words.map(word => (
-                    <label className="anki-word-item" key={word.word}>
-                      <input
-                        type="checkbox"
-                        checked={selectedWords.has(word.word)}
-                        onChange={() => toggleWord(word.word)}
-                      />
+                    <div className="anki-word-item" key={word.word}>
                       <span>{word.word}</span>
-                    </label>
+                      <small>{word.kind === 'vocabulary' ? 'vocabulary' : 'example'}</small>
+                    </div>
                   ))}
                 </div>
-                <button className="anki-import-btn" onClick={handleImport} disabled={working || selectedWords.size === 0}>
-                  {mode === 'learned' ? 'Add' : 'Review'} {selectedWords.size} selected words
+                <button className="anki-import-btn" onClick={handleImport} disabled={working || preview.words.length === 0}>
+                  Add {preview.words.length} words to review queue
                 </button>
               </section>
             )}

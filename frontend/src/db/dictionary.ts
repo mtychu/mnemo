@@ -290,6 +290,18 @@ export async function search(
   return results;
 }
 
+/**
+ * Check whether a candidate is an exact CC-CEDICT entry rather than merely a
+ * prefix of another word.
+ */
+export async function isDictionaryWord(
+  db: IDBPDatabase<MnemoDBSchema>,
+  word: string
+): Promise<boolean> {
+  const results = await search(db, word, 50);
+  return results.some(entry => entry.t === word || entry.s === word);
+}
+
 // ============================================================
 // KNOWN WORDS OPERATIONS
 // ============================================================

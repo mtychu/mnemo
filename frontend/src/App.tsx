@@ -164,7 +164,16 @@ function App() {
       <AnkiImportView
         db={dbInstance}
         onBack={() => setView('import')}
-        onImported={() => setView('lookup')}
+        onQueueWords={async words => {
+          const unknownWords = await filterKnownWords(dbInstance, words)
+          if (unknownWords.length === 0) {
+            window.alert('All Anki candidates are already in your vocabulary.')
+            return
+          }
+          setImportedWords(unknownWords)
+          setAlreadyKnownImportCount(words.length - unknownWords.length)
+          setView('review')
+        }}
         onSuspendedWords={async words => {
           const unknownWords = await filterKnownWords(dbInstance, words)
           if (unknownWords.length === 0) {
