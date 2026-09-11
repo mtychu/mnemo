@@ -3,6 +3,15 @@
 **Date:** 2026-08-30  
 **Status:** Phase 1 in progress — dictionary + import done, GUI next
 
+### Important TODO: Anki learning-state sync
+
+The current local review flow marks a word as known when **Add card** creates
+the local IndexedDB card. This is provisional. The intended behavior is to
+push the card to Anki, track its Anki note/card IDs, and add the word to the
+persistent `knownWords` store only after Anki reports that the card is learned
+(for example, `is:review -is:suspended`). Suspended cards should be eligible
+to return to mnemo's review queue.
+
 ---
 
 ## Quick Context

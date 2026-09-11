@@ -22,6 +22,10 @@
 - [ ] AnkiConnect integration
   - [ ] Create "mnemo Vocab" note type
   - [ ] Push cards with correct fields
+  - [ ] Sync Anki learning state before marking words as known
+    - [ ] Track pushed Anki note/card IDs for local cards
+    - [ ] Add words to `knownWords` only after Anki marks them learned
+    - [ ] Revisit or downgrade words that become suspended
 - [ ] TTS audio generation (word + sentences)
 - [ ] Context/source field support
 
