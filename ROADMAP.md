@@ -22,6 +22,8 @@
 - [ ] AnkiConnect integration
   - [ ] Create "mnemo Vocab" note type
   - [ ] Push cards with correct fields
+  - [x] Create language-specific `glyph-ja` and `glyph-zh` note types
+  - [ ] Decide whether/how to migrate existing `Glyph` notes after testing the new types
   - [ ] Sync Anki learning state before marking words as known
     - [ ] Track pushed Anki note/card IDs for local cards
     - [ ] Add words to `knownWords` only after Anki marks them learned
