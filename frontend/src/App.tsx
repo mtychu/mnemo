@@ -162,13 +162,15 @@ function App() {
   }
 
   if (view === 'anki-import' && dbInstance) {
+    const activeDb = dbInstance
+
     return (
       <AnkiImportView
-        db={dbInstance}
+        db={activeDb}
         onBack={() => setView('import')}
         onLearnedWords={async words => {
           const added = await importKnownWords(
-            dbInstance,
+            activeDb,
             words.map(word => ({
               word: word.word,
               simplified: word.word,
@@ -180,7 +182,7 @@ function App() {
           return added
         }}
         onSuspendedWords={async words => {
-          const unknownWords = await filterKnownWords(dbInstance, words)
+          const unknownWords = await filterKnownWords(activeDb, words)
           if (unknownWords.length === 0) {
             window.alert('All selected suspended words are already in your vocabulary.')
             return

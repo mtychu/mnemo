@@ -1,32 +1,60 @@
-# React + TypeScript + Vite
+# mnemo frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite frontend for mnemo.
 
-Currently, two official plugins are available:
+## Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open the URL printed by Vite, normally `http://localhost:5173`.
+
+## Checks
+
+```bash
+npm run build
+npm run lint
+```
+
+## First Run
+
+The app fetches `public/cedict.json` and loads it into browser IndexedDB. The
+initial load may take a little while. Later visits use the local cached copy.
+
+The IndexedDB database is named `mnemo`; it contains the dictionary, known-word
+store, local card drafts, and metadata. It is local to the current browser
+profile and origin.
+
+## AnkiConnect
+
+Anki must be open with AnkiConnect enabled. Add the Vite origin to AnkiConnect's
+CORS list:
+
+```json
+"webCorsOriginList": [
+  "http://localhost",
+  "http://localhost:5173"
+]
+```
+
+On macOS, the configuration is usually:
+
+```text
+~/Library/Application Support/Anki2/addons21/2055492159/config.json
+```
+
+Restart Anki after changing the configuration. The app uses `deckNames`,
+`modelNames`, `modelFieldNames`, `cardsInfo`, `notesInfo`, and `findCards`.
+
+## Main Views
+
+- Lookup: search the CC-CEDICT dictionary.
+- Import Words: import CSV/text vocabulary and filter known words.
+- Import from Anki: select a deck, note type, vocabulary field, and example
+  field; learned cards seed known vocabulary and suspended cards enter review.
+- Review: inspect candidates, listen to examples, and create local cards.
+
+See the repository-level [README](../README.md) and [HANDOFF](../HANDOFF.md)
+for the complete project state and migration notes.

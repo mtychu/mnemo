@@ -16,12 +16,15 @@
   - [x] Download/parse CC-CEDICT
   - [x] SQLite caching for lookups
 - [x] CSV/text word input (importer.py)
-- [ ] GUI review screen
-  - [ ] Mark words as known/unknown
+- [x] React GUI review screen
+  - [x] Mark words as known/unknown
+  - [x] CSV import with known-word filtering
+  - [x] Anki learned/suspended import modes
+  - [x] Preview and validate Anki vocabulary/example fields
   - [ ] Edit definition/nuance before export
 - [ ] AnkiConnect integration
   - [ ] Create "mnemo Vocab" note type
-  - [ ] Push cards with correct fields
+  - [ ] Push local cards with correct fields
   - [x] Create language-specific `glyph-ja` and `glyph-zh` note types
   - [ ] Decide whether/how to migrate existing `Glyph` notes after testing the new types
   - [ ] Sync Anki learning state before marking words as known
