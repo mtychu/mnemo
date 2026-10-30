@@ -1,8 +1,14 @@
 # mnemo
 
-mnemo is a browser-based tool for preparing Chinese vocabulary cards from CSV
-files and Anki. Its long-term purpose is to turn real-world language exposure
-into useful Anki study material.
+mnemo helps turn vocabulary encountered through real-world language exposure
+into useful study material, with less manual work between encountering a word
+and preparing it for Anki.
+
+Today, mnemo is a browser-based tool for preparing Chinese vocabulary from CSV
+files and Anki. It looks words up in CC-CEDICT, supports reviewing unfamiliar
+vocabulary, and saves local card drafts. Creating and syncing cards directly
+with Anki is a future step; Japanese vocabulary and grammar are longer-term
+directions.
 
 ## Current Workflow
 
